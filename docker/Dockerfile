@@ -21,4 +21,9 @@ RUN . ~/.cargo/env && \
 EXPOSE 9615
 EXPOSE 9944
 
-CMD ["./substrate-contracts-node/target/debug/substrate-contracts-node", "--dev", "--tmp"]
+CMD [ "./substrate-contracts-node/target/debug/substrate-contracts-node", \
+        "--unsafe-ws-external", \
+        "--prometheus-external", \
+        "--dev", \
+        "--tmp" \
+    ]
