@@ -15,14 +15,14 @@ async function run() {
     console.log("Alice Address:", Alice);
     console.log("Alice Balance: ", AliceBalance.data.free.toHuman());
 
-    const contractFactory = await getContractFactory("prosopo", signerAddresses.address);
+    const contractFactory = await getContractFactory("prosopo", Alice);
 
     // The `deploy` method will attempt to deploy a new contract.
     // The `deployed` method will first find out if the same contract already exists based on the parameters.
     // If the contract exists, it will be returned, otherwise a new contract will be created.
     // const contract = await contractFactory.deploy("default", deployer.address);
 
-    const contract = await contractFactory.deployed("default", signerAddresses.address, {
+    const contract = await contractFactory.deployed("default", Alice, {
         gasLimit: "400000000000",
         value: 4e14,
         salt: "0x01",
