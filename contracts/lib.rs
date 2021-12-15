@@ -1007,7 +1007,7 @@ mod prosopo {
 
         /// Get multiple provider's details
         ///
-        /// Returns an error if the user does not exist
+        /// Returns all matched providers
         #[ink(message)]
         pub fn get_providers(
             &self,
