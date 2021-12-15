@@ -1005,6 +1005,27 @@ mod prosopo {
             Ok(provider.unwrap())
         }
 
+        /// Get multiple provider's details
+        ///
+        /// Returns an error if the user does not exist
+        #[ink(message)]
+        pub fn get_providers(
+            &self,
+            accountids: Vec<AccountId>,
+        ) -> Result<Vec<Provider>, ProsopoError> {
+            let mut toreturn = Vec::<Provider>::new();
+            for accountid in accountids {
+                let provider = self.providers.get(&accountid);
+                if provider.is_none() {
+                    ink_env::debug_println!("{}", "ProviderDoesNotExist");
+                    continue;
+                }
+                toreturn.push(provider.unwrap());
+            }
+            ink_env::debug_println!("{:?}", toreturn);
+            Ok(toreturn)
+        }
+
         /// Get a single dapps details
         ///
         /// Returns an error if the dapp does not exist
@@ -1110,6 +1131,23 @@ mod prosopo {
             contract.provider_deregister(provider_account);
             let provider_record = contract.providers.get(&provider_account).unwrap();
             assert!(provider_record.status == Status::Deactivated);
+        }
+
+        /// Test provider list
+        #[ink::test]
+        fn test_get_providers() {
+            let operator_account = AccountId::from([0x1; 32]);
+            let mut contract = Prosopo::default(operator_account);
+            let provider_account = AccountId::from([0x2; 32]);
+            let service_origin = str_to_hash("https://localhost:2424".to_string());
+            let fee: u32 = 0;
+            let mut provider_vec = Vec::<AccountId>::new();
+            provider_vec.push(provider_account);
+            contract.provider_register(service_origin, fee, Payee::Provider, provider_account);
+            assert!(contract.providers.get(&provider_account).is_some());
+            let returned_providers = contract.get_providers(provider_vec);
+            let provider_record = contract.providers.get(&provider_account).unwrap();
+            assert!(returned_providers.unwrap() == vec![provider_record.clone()]);
         }
 
         /// Helper function for converting string to Hash
