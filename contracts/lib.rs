@@ -374,8 +374,6 @@ mod prosopo {
         }
 
 
-
-
         /// Setup phase messages
 
         // Register a provider, their service origin and fee
@@ -437,21 +435,25 @@ mod prosopo {
             let existing = self
                 .get_provider_details(provider_account)
                 .unwrap();
-            let transferred = self.env().transferred_balance();
+            let transferred = self.env().transferred_value();
 
             let mut balance = existing.balance;
+            let mut status = existing.status;
             if transferred > 0 {
                 balance = existing.balance + transferred;
+                status = Status:Active;
+                // TODO Provider is written in provider stake as well - prevent double write?
+                //  Perhaps staking should be performed via provider_update
                 self.provider_stake();
             }
 
             // update an existing provider
             let provider = Provider {
-                status: Status::Deactivated,
+                status,
                 balance,
                 fee,
                 service_origin,
-                captcha_dataset_id: existing.captcha_dataset_id,
+                captcha_dataset_id: existing.captcha_dataset_id, //TODO should this be update-able here??
                 payee,
             };
             self.providers.insert(provider_account, &provider);
@@ -488,7 +490,7 @@ mod prosopo {
         #[ink(payable)]
         pub fn provider_stake(&mut self) -> Result<(), ProsopoError> {
             let caller = self.env().caller();
-            let transferred = self.env().transferred_balance();
+            let transferred = self.env().transferred_value();
             if transferred == 0 {
                 return Err(ProsopoError::InsufficientBalance);
             }
@@ -583,7 +585,7 @@ mod prosopo {
             let caller = self.env().caller();
             // the caller can pass an owner or pass none and be made the owner
             let owner = optional_owner.unwrap_or(caller);
-            let transferred = self.env().transferred_balance();
+            let transferred = self.env().transferred_value();
             // enforces a one to one relation between caller and dapp
             if self.dapps.get(&contract).is_none() {
                 // mark the account as suspended if it is new and no funds have been transferred
@@ -601,7 +603,7 @@ mod prosopo {
                     client_origin,
                 };
                 // keying on contract allows owners to own many contracts
-                self.dapps.insert(contract,&dapp);
+                self.dapps.insert(contract, &dapp);
                 self.dapp_accounts.push(contract);
                 // emit event
                 self.env().emit_event(DappRegister {
@@ -638,7 +640,7 @@ mod prosopo {
                     } else {
                         dapp.status = Status::Suspended;
                     }
-                    self.dapps.insert(contract,&dapp);
+                    self.dapps.insert(contract, &dapp);
                     // emit event
                     self.env().emit_event(DappUpdate {
                         contract,
@@ -658,7 +660,7 @@ mod prosopo {
         #[ink(payable)]
         pub fn dapp_fund(&mut self, contract: AccountId) {
             let caller = self.env().caller();
-            let transferred = self.env().transferred_balance();
+            let transferred = self.env().transferred_value();
             if self.dapps.get(&contract).is_some() {
                 let mut dapp = self.dapps.get(&contract).unwrap();
                 let total = dapp.balance + transferred;
@@ -673,7 +675,7 @@ mod prosopo {
                     // Suspended as dapp has no funds
                     dapp.status = Status::Suspended;
                 }
-                self.dapps.insert(contract,&dapp);
+                self.dapps.insert(contract, &dapp);
             } else {
                 //return the transferred balance to the caller
                 self.env().transfer(caller, transferred).ok();
@@ -691,6 +693,7 @@ mod prosopo {
             let dapp = self.get_dapp_details(contract)?;
 
             // TODO should the operators be authorised to do this ?
+            // TODO If an owner is not specified then the Dapp contract can never be cancelled
             if dapp.owner != caller {
                 return Err(ProsopoError::NotAuthorised);
             }
@@ -1003,27 +1006,6 @@ mod prosopo {
             Ok(provider.unwrap())
         }
 
-        /// Get multiple provider's details
-        ///
-        /// Returns all matched providers
-        #[ink(message)]
-        pub fn get_providers(
-            &self,
-            accountids: Vec<AccountId>,
-        ) -> Result<Vec<Provider>, ProsopoError> {
-            let mut toreturn = Vec::<Provider>::new();
-            for accountid in accountids {
-                let provider = self.providers.get(&accountid);
-                if provider.is_none() {
-                    ink_env::debug_println!("{}", "ProviderDoesNotExist");
-                    continue;
-                }
-                toreturn.push(provider.unwrap());
-            }
-            ink_env::debug_println!("{:?}", toreturn);
-            Ok(toreturn)
-        }
-
         /// Get a single dapps details
         ///
         /// Returns an error if the dapp does not exist
@@ -1057,6 +1039,24 @@ mod prosopo {
                 Ok(v) => { v.balance }
                 Err(_e) => Balance::from(0_u32)
             };
+        }
+
+        // Helper Functions
+
+        fn random_index(&self, start: u16, end:u16, seed:Option<Vec<u8>>) -> u16 {
+            fn max_index(array: &[u8]) -> usize {
+                let mut result = 0;
+
+                for (index, &value) in array.iter().enumerate() {
+                    if value > array[result] {
+                        result = index;
+                    }
+                }
+                result
+            }
+            let seed = seed.unwrap_or_default();
+            let arr = self.env().random(seed).0;
+            return max_index(&arr.as_ref()[start..end])
         }
     }
 
@@ -1111,23 +1111,6 @@ mod prosopo {
             contract.provider_deregister(provider_account);
             let provider_record = contract.providers.get(&provider_account).unwrap();
             assert!(provider_record.status == Status::Deactivated);
-        }
-
-        /// Test provider list
-        #[ink::test]
-        fn test_get_providers() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let mut contract = Prosopo::default(operator_account);
-            let provider_account = AccountId::from([0x2; 32]);
-            let service_origin = str_to_hash("https://localhost:2424".to_string());
-            let fee: u32 = 0;
-            let mut provider_vec = Vec::<AccountId>::new();
-            provider_vec.push(provider_account);
-            contract.provider_register(service_origin, fee, Payee::Provider, provider_account);
-            assert!(contract.providers.get(&provider_account).is_some());
-            let returned_providers = contract.get_providers(provider_vec);
-            let provider_record = contract.providers.get(&provider_account).unwrap();
-            assert!(returned_providers.unwrap() == vec![provider_record.clone()]);
         }
 
         /// Helper function for converting string to Hash
