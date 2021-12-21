@@ -20,13 +20,13 @@ use ink_lang as ink;
 mod prosopo {
     use ink_prelude::collections::btree_set::BTreeSet;
     use ink_prelude::vec::Vec as Vec;
-    #[cfg(not(feature = "ink-as-dependency"))]
     use ink_storage::{
         lazy::Mapping,
         traits::PackedLayout,
         traits::SpreadAllocate,
         traits::SpreadLayout,
         traits::StorageLayout,
+        //Vec not compatible yet
     };
 
     #[derive(
@@ -1131,22 +1131,42 @@ mod prosopo {
             providers
         }
 
+        /// Return a random number between start and end, based on optional seed
+        ///
+        /// Returns integer
+        fn random_index(&self, start: usize, end: usize, seed: Option<AccountId>) -> u8 {
+            fn max_index(array: &[u8]) -> usize {
+                let mut result = 0;
+
+                for (index, &value) in array.iter().enumerate() {
+                    if value > array[result] {
+                        result = index;
+                    }
+                }
+                result
+            }
+            let seed2 = &seed.unwrap_or_default();
+            ink_env::debug_println!("Seed {:?}", seed2);
+            let arr = self.env().random(&[0x02]).0;
+            return max_index(&arr.as_ref()[start..end]).try_into().unwrap();
+        }
+
         /// Return a random active provider
         ///
         /// Returns error if there are no active providers
-        // #[ink(message)]
-        // pub fn get_random_active_provider(&self) -> Result<Provider, ProsopoError> {
-        //     let active_provider_ids = self
-        //         .provider_accounts
-        //         .get(GovernanceStatus::Active)
-        //         .unwrap_or_default();
-        //     if active_provider_ids.is_empty() {
-        //         return Err(ProsopoError::NoActiveProviders);
-        //     }
-        //     let mut rng = rand::thread_rng();
-        //     let provider_id = active_provider_ids.into_iter().choose(&mut rng).unwrap();
-        //     Ok(self.providers.get(provider_id).unwrap())
-        // }
+        #[ink(message)]
+        pub fn get_random_active_provider(&self) -> Result<Provider, ProsopoError> {
+            let active_provider_ids = self
+                .provider_accounts
+                .get(GovernanceStatus::Active)
+                .unwrap_or_default();
+            if active_provider_ids.is_empty() {
+                return Err(ProsopoError::NoActiveProviders);
+            }
+            let rng = self.random_index(0 as usize, active_provider_ids.len(),  Some(self.env().caller()));
+            let provider_id = active_provider_ids.into_iter().nth(rng.into()).unwrap();
+            Ok(self.providers.get(provider_id).unwrap())
+        }
 
         fn get_all_provider_ids(&self) -> Vec<AccountId> {
             let mut provider_ids = Vec::<AccountId>::new();
@@ -1164,21 +1184,7 @@ mod prosopo {
             provider_ids
         }
 
-        fn random_index(&self, start: u8, end: u8, seed: Option<&[u8]>) -> u8 {
-            fn max_index(array: &[u8]) -> usize {
-                let mut result = 0;
 
-                for (index, &value) in array.iter().enumerate() {
-                    if value > array[result] {
-                        result = index;
-                    }
-                }
-                result
-            }
-            let seed = seed.unwrap_or_default();
-            let arr = self.env().random(seed).0;
-            return max_index(&arr.as_ref()[start as usize..end as usize]).try_into().unwrap();
-        }
     }
 
     /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
