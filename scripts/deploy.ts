@@ -1,3 +1,4 @@
+// @ts-ignore
 import {network, patract} from "redspot";
 const {getContractFactory} = patract;
 const {api, getAddresses} = network;

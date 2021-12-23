@@ -43,16 +43,16 @@ mod prosopo {
     }
 
     #[derive(
-        PartialEq,
-        Debug,
-        Eq,
-        Clone,
-        Copy,
-        scale::Encode,
-        scale::Decode,
-        SpreadLayout,
-        PackedLayout,
-        SpreadAllocate,
+    PartialEq,
+    Debug,
+    Eq,
+    Clone,
+    Copy,
+    scale::Encode,
+    scale::Decode,
+    SpreadLayout,
+    PackedLayout,
+    SpreadAllocate,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum CaptchaStatus {
@@ -62,7 +62,8 @@ mod prosopo {
     }
 
     impl Default for GovernanceStatus {
-        fn default() -> Self { GovernanceStatus::Deactivated }}
+        fn default() -> Self { GovernanceStatus::Deactivated }
+    }
 
     impl Default for CaptchaStatus {
         fn default() -> Self {
@@ -149,6 +150,8 @@ mod prosopo {
         status: CaptchaStatus,
         // The Dapp Contract AccountId that the Dapp User wants to interact with
         contract: AccountId,
+        // The Provider AccountId that is permitted to approve or disapprove the commitment
+        provider: AccountId,
     }
 
     #[derive(
@@ -383,8 +386,6 @@ mod prosopo {
         /// Constructor
         #[ink(constructor)]
         pub fn default(operator: AccountId) -> Self {
-            ink_env::debug_println!("in the constructor!");
-
             ink_lang::codegen::initialize_contract(|contract| {
                 Self::new_init(contract, operator)
             })
@@ -598,7 +599,7 @@ mod prosopo {
 
         // Add a new data set
         #[ink(message)]
-        pub fn provider_add_data_set(
+        pub fn provider_add_dataset(
             &mut self,
             merkle_tree_root: Hash,
         ) -> Result<(), ProsopoError> {
@@ -785,9 +786,9 @@ mod prosopo {
         pub fn dapp_user_commit(
             &mut self,
             contract: AccountId,
-            // the id of the captcha data set
             captcha_dataset_id: Hash,
             user_merkle_tree_root: Hash,
+            provider: AccountId,
         ) -> Result<(), ProsopoError> {
             let caller = self.env().caller();
             // Guard against incorrect data being submitted
@@ -795,21 +796,18 @@ mod prosopo {
                 return Err(ProsopoError::CaptchaDataDoesNotExist);
             }
 
-            // make sure the dapp exists and is active
             self.validate_dapp(contract)?;
 
-            // create the commitment
             let commitment = CaptchaSolutionCommitment {
                 account: caller,
                 captcha_dataset_id,
                 status: CaptchaStatus::Pending,
                 contract,
+                provider,
             };
 
-            // Add a new dapp user
             self.create_new_dapp_user(caller);
 
-            // insert the new solution commitment with next key
             self.captcha_solution_commitments.insert(user_merkle_tree_root, &commitment);
 
             self.env().emit_event(DappUserCommit {
@@ -823,14 +821,16 @@ mod prosopo {
 
         fn create_new_dapp_user(&mut self, account: AccountId) {
             // create the user and add to our list of dapp users
-            let user = User {
-                correct_captchas: 0,
-                incorrect_captchas: 0,
-                //last_correct_captcha: (),
-                //last_correct_captcha_dapp_id: (),
-            };
-            self.dapp_users.insert(account, &user);
-            self.dapp_user_accounts.push(account);
+            if self.dapp_users.get(account).is_none() {
+                let user = User {
+                    correct_captchas: 0,
+                    incorrect_captchas: 0,
+                    //last_correct_captcha: (),
+                    //last_correct_captcha_dapp_id: (),
+                };
+                self.dapp_users.insert(account, &user);
+                self.dapp_user_accounts.push(account);
+            }
         }
 
         // Approve a solution commitment, add reputation, and refund the users tx fee
@@ -846,10 +846,12 @@ mod prosopo {
             // Guard against incorrect solution id
             let commitment = self.get_captcha_solution_commitment(
                 captcha_solution_commitment_id,
-                provider.captcha_dataset_id,
             )?;
+            if commitment.provider != caller {
+                return Err(ProsopoError::NotAuthorised);
+            }
             self.validate_dapp(commitment.contract)?;
-            // Check the user exists
+
             self.get_dapp_user(commitment.account)?;
 
 
@@ -886,8 +888,10 @@ mod prosopo {
             // Guard against incorrect solution id
             let commitment = self.get_captcha_solution_commitment(
                 captcha_solution_commitment_id,
-                provider.captcha_dataset_id,
             )?;
+            if commitment.provider != caller {
+                return Err(ProsopoError::NotAuthorised);
+            }
             self.validate_dapp(commitment.contract)?;
             // Check the user exists
             self.get_dapp_user(commitment.account)?;
@@ -1012,10 +1016,13 @@ mod prosopo {
             Ok(())
         }
 
+        /// Get a solution commitment
+        ///
+        /// Returns an error if the commitment does not exist
+        #[ink(message)]
         pub fn get_captcha_solution_commitment(
             &self,
             captcha_solution_commitment_id: Hash,
-            captcha_dataset_id: Hash,
         ) -> Result<CaptchaSolutionCommitment, ProsopoError> {
             if self
                 .captcha_solution_commitments
@@ -1027,10 +1034,7 @@ mod prosopo {
                 .captcha_solution_commitments
                 .get(&captcha_solution_commitment_id)
                 .unwrap();
-            // The provider must own the captcha data to modify the commitment
-            if commitment.captcha_dataset_id != captcha_dataset_id {
-                return Err(ProsopoError::NotAuthorised);
-            }
+
             Ok(commitment)
         }
 
@@ -1163,7 +1167,7 @@ mod prosopo {
             if active_provider_ids.is_empty() {
                 return Err(ProsopoError::NoActiveProviders);
             }
-            let rng = self.random_index(0 as usize, active_provider_ids.len(),  Some(self.env().caller()));
+            let rng = self.random_index(0 as usize, active_provider_ids.len(), Some(self.env().caller()));
             let provider_id = active_provider_ids.into_iter().nth(rng.into()).unwrap();
             Ok(self.providers.get(provider_id).unwrap())
         }
@@ -1183,8 +1187,6 @@ mod prosopo {
             }
             provider_ids
         }
-
-
     }
 
     /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
@@ -1475,7 +1477,7 @@ mod prosopo {
         /// Test provider add data set
         #[ink::test]
         //TODO off-chain environment does not yet support `block_timestamp`
-        fn test_provider_add_data_set() {
+        fn test_provider_add_dataset() {
             let operator_account = AccountId::from([0x1; 32]);
             let mut contract = Prosopo::default(operator_account);
             let provider_account = AccountId::from([0x02; 32]);
@@ -1494,7 +1496,7 @@ mod prosopo {
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
             contract.provider_stake();
             let root = str_to_hash("merkle tree".to_string());
-            contract.provider_add_data_set(root).ok();
+            contract.provider_add_dataset(root).ok();
             let emitted_events = ink_env::test::recorded_events().collect::<Vec<_>>();
 
             // events are the register, stake, add data set
@@ -1527,7 +1529,7 @@ mod prosopo {
 
         /// Test provider cannot add data set if inactive
         #[ink::test]
-        fn test_provider_cannot_add_data_set_if_inactive() {
+        fn test_provider_cannot_add_dataset_if_inactive() {
             let operator_account = AccountId::from([0x1; 32]);
             let mut contract = Prosopo::default(operator_account);
             let provider_account = AccountId::from([0x02; 32]);
@@ -1545,7 +1547,7 @@ mod prosopo {
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
             let root = str_to_hash("merkle tree".to_string());
-            let result = contract.provider_add_data_set(root).unwrap_err();
+            let result = contract.provider_add_dataset(root).unwrap_err();
             assert_eq!(ProviderInactive, result)
         }
 
@@ -1752,7 +1754,7 @@ mod prosopo {
             contract.provider_stake();
             // can only add data set after staking
             // TODO test scenario where dataset is added before staking
-            contract.provider_add_data_set(root).ok();
+            contract.provider_add_dataset(root).ok();
 
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -1770,7 +1772,7 @@ mod prosopo {
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
             contract
-                .dapp_user_commit(dapp_contract_account, root, user_root)
+                .dapp_user_commit(dapp_contract_account, root, user_root, provider_account)
                 .ok();
 
             // check that the data is in the captcha_solution_commitments hashmap
@@ -1801,7 +1803,7 @@ mod prosopo {
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
             contract.provider_stake();
             // can only add data set after staking
-            contract.provider_add_data_set(root).ok();
+            contract.provider_add_dataset(root).ok();
 
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -1819,7 +1821,7 @@ mod prosopo {
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
             contract
-                .dapp_user_commit(dapp_contract_account, root, user_root)
+                .dapp_user_commit(dapp_contract_account, root, user_root, provider_account)
                 .ok();
 
             // Call from the provider account to mark the solution as approved
@@ -1873,7 +1875,7 @@ mod prosopo {
             contract.provider_stake();
             // can only add data set after staking
             // TODO test scenario where dataset is added before staking
-            contract.provider_add_data_set(root).ok();
+            contract.provider_add_dataset(root).ok();
 
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -1891,7 +1893,7 @@ mod prosopo {
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
             contract
-                .dapp_user_commit(dapp_contract_account, root, user_root)
+                .dapp_user_commit(dapp_contract_account, root, user_root, provider_account)
                 .ok();
 
             // Call from the provider account to mark the wrong solution as approved
@@ -1928,7 +1930,7 @@ mod prosopo {
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
             contract.provider_stake();
             // can only add data set after staking
-            contract.provider_add_data_set(root).ok();
+            contract.provider_add_dataset(root).ok();
 
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -1946,7 +1948,7 @@ mod prosopo {
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
             contract
-                .dapp_user_commit(dapp_contract_account, root, user_root)
+                .dapp_user_commit(dapp_contract_account, root, user_root, provider_account)
                 .ok();
 
             // Call from the provider account to mark the solution as disapproved
@@ -1998,7 +2000,7 @@ mod prosopo {
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
             contract.provider_stake();
             // can only add data set after staking
-            contract.provider_add_data_set(root).ok();
+            contract.provider_add_dataset(root).ok();
 
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -2018,7 +2020,7 @@ mod prosopo {
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(dapp_user_account);
             let user_root = str_to_hash("user merkle tree root".to_string());
             contract
-                .dapp_user_commit(dapp_contract_account, root, user_root)
+                .dapp_user_commit(dapp_contract_account, root, user_root, provider_account)
                 .ok();
 
             // Call from the provider account to mark the solution as disapproved
