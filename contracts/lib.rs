@@ -399,8 +399,7 @@ mod prosopo {
         }
 
 
-        /// Setup phase messages
-        // Register a provider, their service origin and fee
+        /// Register a provider, their service origin and fee
         #[ink(message)]
         pub fn provider_register(
             &mut self,
@@ -442,7 +441,7 @@ mod prosopo {
             Ok(())
         }
 
-        // // Update an existing provider, their service origin, fee
+        /// Update an existing provider, their service origin, fee
         #[ink(message)]
         pub fn provider_update(
             &mut self,
@@ -494,7 +493,7 @@ mod prosopo {
             Ok(())
         }
 
-        // De-Register a provider by setting their status to Deactivated
+        /// De-Register a provider by setting their status to Deactivated
         #[ink(message)]
         pub fn provider_deregister(&mut self, provider_account: AccountId) -> Result<(), ProsopoError> {
             //TODO could get rid of provider_account parameter
@@ -542,7 +541,7 @@ mod prosopo {
             Ok(())
         }
 
-        // Stake and activate the provider's service
+        /// Stake and activate the provider's service
         #[ink(message)]
         #[ink(payable)]
         pub fn provider_stake(&mut self) -> Result<(), ProsopoError> {
@@ -573,8 +572,9 @@ mod prosopo {
             Ok(())
         }
 
-        // Unstake and deactivate the provider's service, returning stake
+
         // TODO allow Provider to unstake(withdraw) less than they have staked
+        /// Unstake and deactivate the provider's service, returning stake
         #[ink(message)]
         #[ink(payable)]
         pub fn provider_unstake(&mut self) -> Result<(), ProsopoError> {
@@ -597,7 +597,7 @@ mod prosopo {
             Ok(())
         }
 
-        // Add a new data set
+        /// Add a new data set
         #[ink(message)]
         pub fn provider_add_dataset(
             &mut self,
@@ -631,7 +631,7 @@ mod prosopo {
             Ok(())
         }
 
-        // Register a dapp
+        /// Register a dapp
         #[ink(message)]
         pub fn dapp_register(
             &mut self,
@@ -712,7 +712,7 @@ mod prosopo {
             }
         }
 
-        // Fund dapp account to pay for services, if the Dapp caller is registered in self.dapps
+        /// Fund dapp account to pay for services, if the Dapp caller is registered in self.dapps
         #[ink(message)]
         #[ink(payable)]
         pub fn dapp_fund(&mut self, contract: AccountId) {
@@ -739,7 +739,7 @@ mod prosopo {
             }
         }
 
-        // Cancel services as a dapp, returning remaining tokens
+        /// Cancel services as a dapp, returning remaining tokens
         #[ink(message)]
         pub fn dapp_cancel(&mut self, contract: AccountId) -> Result<(), ProsopoError> {
             let caller = self.env().caller();
@@ -779,9 +779,7 @@ mod prosopo {
             //self.dapp_accounts.retain(|account: &AccountId| account != &dapp_account);
         }
 
-        /// Captcha reputation protocol messages
-
-        // Submit a captcha solution commit
+        /// Submit a captcha solution commit
         #[ink(message)]
         pub fn dapp_user_commit(
             &mut self,
@@ -819,6 +817,7 @@ mod prosopo {
             Ok(())
         }
 
+        /// Create a new dapp user if they do not already exist
         fn create_new_dapp_user(&mut self, account: AccountId) {
             // create the user and add to our list of dapp users
             if self.dapp_users.get(account).is_none() {
@@ -833,7 +832,7 @@ mod prosopo {
             }
         }
 
-        // Approve a solution commitment, add reputation, and refund the users tx fee
+        /// Approve a solution commitment, increment correct captchas, and refund the users tx fee
         #[ink(message)]
         // TODO - should providers be prevented from later changing the status?
         pub fn provider_approve(
@@ -876,7 +875,7 @@ mod prosopo {
             Ok(())
         }
 
-        // Disapprove a solution commitment and subtract reputation
+        /// Disapprove a solution commitment and increment incorrect captchas
         #[ink(message)]
         pub fn provider_disapprove(
             &mut self,
@@ -919,7 +918,7 @@ mod prosopo {
             Ok(())
         }
 
-        // Transfer a balance from a provider to a dapp or from a dapp to a provider,
+        /// Transfer a balance from a provider to a dapp or from a dapp to a provider,
         fn pay_fee(&mut self, provider_account: &AccountId, dapp_account: &AccountId) -> Result<(), ProsopoError> {
             let mut provider = self.providers.get(provider_account).unwrap();
             if provider.fee != 0 {
