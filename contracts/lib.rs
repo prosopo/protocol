@@ -1185,17 +1185,20 @@ mod prosopo {
             providers
         }
 
-        /// List providers given an array of status
+        /// Get a random active provider
         ///
-        /// Returns empty if none were matched
+        /// Returns error if no active providers is found
         #[ink(message)]
         pub fn get_random_active_provider(&self) -> Result<Provider, ProsopoError> {
             let active_providers = self
                 .provider_accounts
                 .get(GovernanceStatus::Active)
                 .unwrap();
-            let max = active_providers.len() - 1;
-            let index = self.get_random_number(0, max as u32);
+            let max = active_providers.len();
+            if max == 0 {
+                return Err(ProsopoError::NoActiveProviders);
+            }
+            let index = self.get_random_number(0, (max - 1) as u32);
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
             Ok(self.providers.get(provider_id).unwrap())
         }
