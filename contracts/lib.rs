@@ -21,6 +21,10 @@ mod prosopo {
     use ink_prelude::collections::btree_set::BTreeSet;
     use ink_prelude::vec::Vec;
 
+    use rand_chacha::rand_core::RngCore;
+    use rand_chacha::rand_core::SeedableRng;
+    use rand_chacha::ChaCha8Rng;
+
     #[cfg(not(feature = "ink-as-dependency"))]
     use ink_storage::{
         lazy::Mapping, traits::PackedLayout, traits::SpreadAllocate, traits::SpreadLayout,
@@ -456,7 +460,7 @@ mod prosopo {
             payee: Payee,
             provider_account: AccountId,
         ) -> Result<(), ProsopoError> {
-            let caller = self.env().caller();
+            // let caller = self.env().caller();
             // TODO eventually remove operator checks to allow anyone to signup
             // if !self.operators.get(&caller) {
             //     return Err(ProsopoError::NotAuthorised);
@@ -1181,22 +1185,20 @@ mod prosopo {
             providers
         }
 
-        /// Return a random active provider
+        /// List providers given an array of status
         ///
-        /// Returns error if there are no active providers
-        // #[ink(message)]
-        // pub fn get_random_active_provider(&self) -> Result<Provider, ProsopoError> {
-        //     let active_provider_ids = self
-        //         .provider_accounts
-        //         .get(GovernanceStatus::Active)
-        //         .unwrap_or_default();
-        //     if active_provider_ids.is_empty() {
-        //         return Err(ProsopoError::NoActiveProviders);
-        //     }
-        //     let mut rng = rand::thread_rng();
-        //     let provider_id = active_provider_ids.into_iter().choose(&mut rng).unwrap();
-        //     Ok(self.providers.get(provider_id).unwrap())
-        // }
+        /// Returns empty if none were matched
+        #[ink(message)]
+        pub fn get_random_active_provider(&self) -> Result<Provider, ProsopoError> {
+            let active_providers = self
+                .provider_accounts
+                .get(GovernanceStatus::Active)
+                .unwrap();
+            let max = active_providers.len() - 1;
+            let index = self.get_random_number(0, max as u32);
+            let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
+            Ok(self.providers.get(provider_id).unwrap())
+        }
 
         fn get_all_provider_ids(&self) -> Vec<AccountId> {
             let mut provider_ids = Vec::<AccountId>::new();
@@ -1212,6 +1214,14 @@ mod prosopo {
                 provider_ids.append(&mut providers_set.unwrap().into_iter().collect());
             }
             provider_ids
+        }
+
+        fn get_random_number(&self, min: u32, max: u32) -> u32 {
+            let random_seed = self.env().random(&b"prosopo_contract"[..]);
+            let mut seed_converted: [u8; 32] = Default::default();
+            seed_converted.copy_from_slice(random_seed.0.as_ref());
+            let mut rng = ChaCha8Rng::from_seed(seed_converted);
+            min + rng.next_u32() % (max - min)
         }
     }
 
@@ -1284,6 +1294,16 @@ mod prosopo {
             assert!(registered_provider_account.is_some());
             let returned_list = contract.list_providers_by_ids(vec![provider_account]);
             assert!(returned_list == vec![registered_provider_account.unwrap()]);
+        }
+
+        // Test get random number
+        #[ink::test]
+        fn test_get_random_number() {
+            let operator_account = AccountId::from([0x1; 32]);
+            let contract = Prosopo::default(operator_account);
+            let number = contract.get_random_number(1, 128);
+            ink_env::debug_println!("{}", number);
+            assert!((1 <= number) && (number <= 128));
         }
 
         /// Helper function for converting string to Hash
@@ -2085,6 +2105,25 @@ mod prosopo {
             // initialise the contract
             let mut contract = Prosopo::default(operator_account);
             assert_eq!(0, contract.get_provider_balance(provider_account));
+        }
+
+        // Test get random provider
+        #[ink::test]
+        fn test_get_random_active_provider() {
+            let operator_account = AccountId::from([0x1; 32]);
+            let mut contract = Prosopo::default(operator_account);
+            let provider_account = AccountId::from([0x2; 32]);
+            let service_origin = str_to_hash("https://localhost:2424".to_string());
+            let fee: u32 = 0;
+            contract.provider_register(service_origin, fee, Payee::Provider, provider_account);
+            let fee2: u32 = 100;
+            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
+            let balance = 1000;
+            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            contract.provider_update(service_origin, fee, Payee::Dapp, provider_account);
+            let registered_provider_account = contract.providers.get(&provider_account);
+            let selected_provider = contract.get_random_provider();
+            assert!(selected_provider.unwrap() == registered_provider_account.unwrap());
         }
 
         /// Helper function for converting string to Hash
