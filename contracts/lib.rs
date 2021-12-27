@@ -23,7 +23,7 @@ mod prosopo {
 
     use rand_chacha::rand_core::RngCore;
     use rand_chacha::rand_core::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand_chacha::ChaChaRng;
 
     #[cfg(not(feature = "ink-as-dependency"))]
     use ink_storage::{
@@ -1198,7 +1198,7 @@ mod prosopo {
             if max == 0 {
                 return Err(ProsopoError::NoActiveProviders);
             }
-            let index = self.get_random_number(0, (max - 1) as u32);
+            let index = self.get_random_number(0, (max - 1) as u64);
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
             Ok(self.providers.get(provider_id).unwrap())
         }
@@ -1219,12 +1219,13 @@ mod prosopo {
             provider_ids
         }
 
-        fn get_random_number(&self, min: u32, max: u32) -> u32 {
+        fn get_random_number(&self, min: u64, max: u64) -> u64 {
             let random_seed = self.env().random(&b"prosopo_contract"[..]);
             let mut seed_converted: [u8; 32] = Default::default();
             seed_converted.copy_from_slice(random_seed.0.as_ref());
-            let mut rng = ChaCha8Rng::from_seed(seed_converted);
-            min + rng.next_u32() % (max - min)
+            let mut rng = ChaChaRng::from_seed(seed_converted);
+            ((rng.next_u64() as f64 / u64::MAX as f64) * (max - min) as f64 + min as f64).round()
+                as u64
         }
     }
 
@@ -1304,9 +1305,13 @@ mod prosopo {
         fn test_get_random_number() {
             let operator_account = AccountId::from([0x1; 32]);
             let contract = Prosopo::default(operator_account);
-            let number = contract.get_random_number(1, 128);
+            let mut number = contract.get_random_number(1, 128);
             ink_env::debug_println!("{}", number);
             assert!((1 <= number) && (number <= 128));
+
+            number = contract.get_random_number(0, 1);
+            ink_env::debug_println!("{}", number);
+            assert!(number == 0 || number == 1);
         }
 
         /// Helper function for converting string to Hash
