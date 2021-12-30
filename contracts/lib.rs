@@ -1220,7 +1220,7 @@ mod prosopo {
         }
 
         fn get_random_number(&self, min: u64, max: u64) -> u64 {
-            let random_seed = self.env().random(&b"prosopo_contract"[..]);
+            let random_seed = self.env().random(self.env().caller().as_ref());
             let mut seed_converted: [u8; 32] = Default::default();
             seed_converted.copy_from_slice(random_seed.0.as_ref());
             let mut rng = ChaChaRng::from_seed(seed_converted);
