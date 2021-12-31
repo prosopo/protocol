@@ -20,7 +20,6 @@ use ink_lang as ink;
 mod prosopo {
     use ink_prelude::collections::btree_set::BTreeSet;
     use ink_prelude::vec::Vec;
-
     use rand_chacha::rand_core::RngCore;
     use rand_chacha::rand_core::SeedableRng;
     use rand_chacha::ChaChaRng;
@@ -31,16 +30,16 @@ mod prosopo {
     };
 
     #[derive(
-        PartialEq,
-        Debug,
-        Eq,
-        Clone,
-        Copy,
-        scale::Encode,
-        scale::Decode,
-        SpreadLayout,
-        PackedLayout,
-        SpreadAllocate,
+    PartialEq,
+    Debug,
+    Eq,
+    Clone,
+    Copy,
+    scale::Encode,
+    scale::Decode,
+    SpreadLayout,
+    PackedLayout,
+    SpreadAllocate,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum GovernanceStatus {
@@ -50,16 +49,16 @@ mod prosopo {
     }
 
     #[derive(
-        PartialEq,
-        Debug,
-        Eq,
-        Clone,
-        Copy,
-        scale::Encode,
-        scale::Decode,
-        SpreadLayout,
-        PackedLayout,
-        SpreadAllocate,
+    PartialEq,
+    Debug,
+    Eq,
+    Clone,
+    Copy,
+    scale::Encode,
+    scale::Decode,
+    SpreadLayout,
+    PackedLayout,
+    SpreadAllocate,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum CaptchaStatus {
@@ -81,16 +80,16 @@ mod prosopo {
     }
 
     #[derive(
-        PartialEq,
-        Debug,
-        Eq,
-        Clone,
-        Copy,
-        scale::Encode,
-        scale::Decode,
-        SpreadLayout,
-        PackedLayout,
-        SpreadAllocate,
+    PartialEq,
+    Debug,
+    Eq,
+    Clone,
+    Copy,
+    scale::Encode,
+    scale::Decode,
+    SpreadLayout,
+    PackedLayout,
+    SpreadAllocate,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum Payee {
@@ -106,16 +105,16 @@ mod prosopo {
     }
 
     #[derive(
-        PartialEq,
-        Debug,
-        Eq,
-        Clone,
-        scale::Encode,
-        scale::Decode,
-        SpreadLayout,
-        PackedLayout,
-        SpreadAllocate,
-        Copy,
+    PartialEq,
+    Debug,
+    Eq,
+    Clone,
+    scale::Encode,
+    scale::Decode,
+    SpreadLayout,
+    PackedLayout,
+    SpreadAllocate,
+    Copy,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Provider {
@@ -133,16 +132,16 @@ mod prosopo {
     }
 
     #[derive(
-        PartialEq,
-        Debug,
-        Eq,
-        Clone,
-        Copy,
-        scale::Encode,
-        scale::Decode,
-        SpreadLayout,
-        PackedLayout,
-        SpreadAllocate,
+    PartialEq,
+    Debug,
+    Eq,
+    Clone,
+    Copy,
+    scale::Encode,
+    scale::Decode,
+    SpreadLayout,
+    PackedLayout,
+    SpreadAllocate,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Operator {
@@ -150,16 +149,16 @@ mod prosopo {
     }
 
     #[derive(
-        PartialEq,
-        Debug,
-        Eq,
-        Clone,
-        Copy,
-        scale::Encode,
-        scale::Decode,
-        SpreadLayout,
-        PackedLayout,
-        SpreadAllocate,
+    PartialEq,
+    Debug,
+    Eq,
+    Clone,
+    Copy,
+    scale::Encode,
+    scale::Decode,
+    SpreadLayout,
+    PackedLayout,
+    SpreadAllocate,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct CaptchaData {
@@ -169,16 +168,16 @@ mod prosopo {
     }
 
     #[derive(
-        PartialEq,
-        Debug,
-        Eq,
-        Clone,
-        Copy,
-        scale::Encode,
-        scale::Decode,
-        SpreadLayout,
-        PackedLayout,
-        SpreadAllocate,
+    PartialEq,
+    Debug,
+    Eq,
+    Clone,
+    Copy,
+    scale::Encode,
+    scale::Decode,
+    SpreadLayout,
+    PackedLayout,
+    SpreadAllocate,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct CaptchaSolutionCommitment {
@@ -195,16 +194,16 @@ mod prosopo {
     }
 
     #[derive(
-        PartialEq,
-        Debug,
-        Eq,
-        Clone,
-        scale::Encode,
-        scale::Decode,
-        SpreadLayout,
-        PackedLayout,
-        SpreadAllocate,
-        Copy,
+    PartialEq,
+    Debug,
+    Eq,
+    Clone,
+    scale::Encode,
+    scale::Decode,
+    SpreadLayout,
+    PackedLayout,
+    SpreadAllocate,
+    Copy,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Dapp {
@@ -218,16 +217,16 @@ mod prosopo {
     }
 
     #[derive(
-        PartialEq,
-        Debug,
-        Eq,
-        Clone,
-        scale::Encode,
-        scale::Decode,
-        SpreadLayout,
-        PackedLayout,
-        SpreadAllocate,
-        Copy,
+    PartialEq,
+    Debug,
+    Eq,
+    Clone,
+    scale::Encode,
+    scale::Decode,
+    SpreadLayout,
+    PackedLayout,
+    SpreadAllocate,
+    Copy,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct User {
@@ -512,33 +511,63 @@ mod prosopo {
             }
 
             let existing = self.get_provider_details(provider_account).unwrap();
-            let transferred = self.env().transferred_value();
+            let old_status = existing.status;
+            let mut new_status = existing.status;
+            let balance = existing.balance + self.env().transferred_value();
 
-            let mut balance = existing.balance;
-            let mut status = existing.status;
-            if transferred > 0 {
-                balance = existing.balance + transferred;
-                status = GovernanceStatus::Active;
-                // TODO Provider is written in provider stake as well - prevent double write?
-                //  Perhaps staking should be performed via provider_update
-                self.provider_stake();
+            if balance >= self.provider_stake_default {
+                new_status = GovernanceStatus::Active;
             }
 
             // update an existing provider
             let provider = Provider {
-                status,
+                status: new_status,
                 balance,
                 fee,
                 service_origin,
                 captcha_dataset_id: existing.captcha_dataset_id, //TODO should this be update-able here??
                 payee,
             };
+
+            self.provider_change_status(provider_account, old_status, new_status);
             self.providers.insert(provider_account, &provider);
 
             self.env().emit_event(ProviderUpdate {
                 account: provider_account,
             });
             Ok(())
+        }
+
+        /// Switch the `provider_account` between indexes in `self.provider_accounts`
+        fn provider_change_status(
+            &mut self,
+            provider_account: AccountId,
+            current_provider_status: GovernanceStatus,
+            new_status: GovernanceStatus,
+        ) {
+            if current_provider_status != new_status {
+                // Retrieve indexes from storage mapping
+                let mut current_status_provider_accounts = self
+                    .provider_accounts
+                    .get(current_provider_status)
+                    .unwrap_or_default();
+                let mut new_status_provider_accounts = self
+                    .provider_accounts
+                    .get(new_status)
+                    .unwrap_or_default();
+
+                // Move provider to the correct index
+                current_status_provider_accounts.remove(&provider_account);
+                new_status_provider_accounts.insert(provider_account);
+
+                // Store mapping
+                self.provider_accounts
+                    .insert(current_provider_status, &current_status_provider_accounts);
+                self.provider_accounts.insert(
+                    new_status,
+                    &new_status_provider_accounts,
+                );
+            }
         }
 
         /// De-Register a provider by setting their status to Deactivated
@@ -555,32 +584,10 @@ mod prosopo {
                 // Get provider
                 let mut provider = self.providers.get(&provider_account).unwrap();
 
-                // Retrieve indexes from storage mapping
-                let current_provider_status = provider.status;
-                let mut current_status_provider_accounts = self
-                    .provider_accounts
-                    .get(current_provider_status)
-                    .unwrap_or_default();
-                let mut deactivated_provider_accounts = self
-                    .provider_accounts
-                    .get(GovernanceStatus::Deactivated)
-                    .unwrap_or_default();
-
                 // Update provider status
+                self.provider_change_status(provider_account, provider.status, GovernanceStatus::Deactivated);
                 provider.status = GovernanceStatus::Deactivated;
                 self.providers.insert(provider_account, &provider);
-
-                // Move provider to the correct index
-                current_status_provider_accounts.remove(&provider_account);
-                deactivated_provider_accounts.insert(provider_account);
-
-                // Store mapping
-                self.provider_accounts
-                    .insert(current_provider_status, &current_status_provider_accounts);
-                self.provider_accounts.insert(
-                    GovernanceStatus::Deactivated,
-                    &deactivated_provider_accounts,
-                );
 
                 self.env().emit_event(ProviderDeregister {
                     account: provider_account,
@@ -588,37 +595,6 @@ mod prosopo {
                 //}
             } else {
                 return Err(ProsopoError::NotAuthorised);
-            }
-            Ok(())
-        }
-
-        /// Stake and activate the provider's service
-        #[ink(message)]
-        #[ink(payable)]
-        pub fn provider_stake(&mut self) -> Result<(), ProsopoError> {
-            let caller = self.env().caller();
-            let transferred = self.env().transferred_value();
-            if transferred == 0 {
-                return Err(ProsopoError::InsufficientBalance);
-            }
-
-            // TODO should the operators be able to do this ?
-            if self.providers.get(&caller).is_some() {
-                let mut provider = self.providers.get(&caller).unwrap();
-                let total_balance = provider.balance + transferred;
-                provider.balance = total_balance;
-                if total_balance >= self.provider_stake_default {
-                    provider.status = GovernanceStatus::Active;
-                }
-                self.providers.insert(caller, &provider);
-                self.env().emit_event(ProviderStake {
-                    account: caller,
-                    value: total_balance,
-                });
-            } else {
-                //TODO is this necessary with the changes in ink? - returning an error SHOULD revert any changes but does it return funds?
-                self.env().transfer(caller, transferred).ok();
-                return Err(ProsopoError::ProviderDoesNotExist);
             }
             Ok(())
         }
@@ -889,7 +865,6 @@ mod prosopo {
         ) -> Result<(), ProsopoError> {
             let caller = self.env().caller();
             self.validate_provider(caller)?;
-            let provider = self.providers.get(&caller).unwrap();
             // Guard against incorrect solution id
             let commitment =
                 self.get_captcha_solution_commitment(captcha_solution_commitment_id)?;
@@ -931,7 +906,6 @@ mod prosopo {
         ) -> Result<(), ProsopoError> {
             let caller = self.env().caller();
             self.validate_provider(caller)?;
-            let provider = self.providers.get(&caller).unwrap();
             // Guard against incorrect solution id
             let commitment =
                 self.get_captcha_solution_commitment(captcha_solution_commitment_id)?;
@@ -1277,7 +1251,7 @@ mod prosopo {
             assert!(contract.providers.get(&provider_account).is_some());
             contract.provider_deregister(provider_account);
             let provider_record = contract.providers.get(&provider_account).unwrap();
-            assert!(provider_record.status == Status::Deactivated);
+            assert!(provider_record.status == GovernanceStatus::Deactivated);
         }
 
         /// Test list providers
@@ -1333,7 +1307,6 @@ mod prosopo {
 
         use super::*;
         use ink_env::test::EmittedEvent;
-        use std::fmt::{Debug, Formatter};
 
         type Event = <Prosopo as ::ink_lang::reflect::ContractEventBase>::Type;
 
@@ -1357,12 +1330,12 @@ mod prosopo {
             let provider_account = AccountId::from([0x2; 32]);
             let service_origin = str_to_hash("https://localhost:2424".to_string());
             let fee: u32 = 0;
-            contract.provider_register(service_origin, fee, Payee::Provider, provider_account);
+            contract.provider_register(service_origin, fee, Payee::Provider, provider_account).unwrap();
             assert!(contract.providers.get(&provider_account).is_some());
             assert!(contract
                 .provider_accounts
                 .get(GovernanceStatus::Deactivated)
-                .unwrap_or_default()
+                .unwrap()
                 .contains(&provider_account));
             let service_origin = str_to_hash("https://localhost:4242".to_string());
             let fee: u32 = 100;
@@ -1373,21 +1346,21 @@ mod prosopo {
             assert!(contract
                 .provider_accounts
                 .get(GovernanceStatus::Active)
-                .unwrap_or_default()
+                .unwrap()
                 .contains(&provider_account));
             let provider = contract.providers.get(&provider_account).unwrap();
             assert_eq!(provider.service_origin, service_origin);
             assert_eq!(provider.fee, fee);
             assert_eq!(provider.payee, Payee::Dapp);
             assert_eq!(provider.balance, balance);
+            assert_eq!(provider.status, GovernanceStatus::Active);
 
             let emitted_events = ink_env::test::recorded_events().collect::<Vec<_>>();
 
-            // first event is the register event, second event is the stake event, finally update
-            assert_eq!(3, emitted_events.len());
+            // first event is the register event, second event is the update
+            assert_eq!(2, emitted_events.len());
 
-            let event_provider_stake = &emitted_events[1];
-            let event_provider_update = &emitted_events[2];
+            let event_provider_update = &emitted_events[1];
 
             let decoded_event_update =
                 <Event as scale::Decode>::decode(&mut &event_provider_update.data[..])
@@ -1406,63 +1379,6 @@ mod prosopo {
             }
         }
 
-        /// Test provider stake
-        #[ink::test]
-        fn test_provider_stake() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let mut contract = Prosopo::default(operator_account);
-            let provider_account = AccountId::from([0x02; 32]);
-            let service_origin = str_to_hash("https://localhost:2424".to_string());
-            let fee: u32 = 0;
-            let balance: u128 = 10;
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(operator_account);
-            contract
-                .provider_register(service_origin, fee, Payee::Provider, provider_account)
-                .ok();
-            ink_env::test::set_account_balance::<ink_env::DefaultEnvironment>(
-                provider_account,
-                balance,
-            );
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
-            contract.provider_stake();
-
-            let emitted_events = ink_env::test::recorded_events().collect::<Vec<_>>();
-
-            //ink_env::debug_println!("{:?}", emitted_events);
-
-            // first event is the register event, second event is the stake event
-            assert_eq!(2, emitted_events.len());
-
-            let event_register = &emitted_events[0];
-            let event_stake = &emitted_events[1];
-
-            let decoded_event_register =
-                <Event as scale::Decode>::decode(&mut &event_register.data[..])
-                    .expect("encountered invalid contract event data buffer");
-
-            if let Event::ProviderRegister(ProviderRegister { account }) = decoded_event_register {
-                assert_eq!(
-                    account, provider_account,
-                    "encountered invalid ProviderStake.account"
-                );
-            } else {
-                panic!("encountered unexpected event kind: expected a ProviderRegister event");
-            }
-
-            let decoded_event_stake = <Event as scale::Decode>::decode(&mut &event_stake.data[..])
-                .expect("encountered invalid contract event data buffer");
-
-            if let Event::ProviderStake(ProviderStake { account, value }) = decoded_event_stake {
-                assert_eq!(
-                    account, provider_account,
-                    "encountered invalid ProviderStake.account"
-                );
-                assert_eq!(value, balance, "encountered invalid ProviderStake.value");
-            } else {
-                panic!("encountered unexpected event kind: expected a ProviderStake event");
-            }
-        }
 
         /// Test provider unstake
         #[ink::test]
@@ -1483,7 +1399,7 @@ mod prosopo {
             );
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
-            contract.provider_stake();
+            contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
             contract.provider_unstake().ok();
             let emitted_events = ink_env::test::recorded_events().collect::<Vec<_>>();
 
@@ -1497,7 +1413,7 @@ mod prosopo {
                     .expect("encountered invalid contract event data buffer");
 
             if let Event::ProviderUnstake(ProviderUnstake { account, value }) =
-                decoded_event_unstake
+            decoded_event_unstake
             {
                 assert_eq!(
                     account, provider_account,
@@ -1532,7 +1448,7 @@ mod prosopo {
             );
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
-            contract.provider_stake();
+            contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
             let root = str_to_hash("merkle tree".to_string());
             contract.provider_add_dataset(root).ok();
             let emitted_events = ink_env::test::recorded_events().collect::<Vec<_>>();
@@ -1546,9 +1462,9 @@ mod prosopo {
                     .expect("encountered invalid contract event data buffer");
 
             if let Event::ProviderAddDataset(ProviderAddDataset {
-                account,
-                merkle_tree_root,
-            }) = decoded_event_unstake
+                                                 account,
+                                                 merkle_tree_root,
+                                             }) = decoded_event_unstake
             {
                 assert_eq!(
                     account, provider_account,
@@ -1786,7 +1702,7 @@ mod prosopo {
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             let root = str_to_hash("blah".to_string());
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
-            contract.provider_stake();
+            contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
             // can only add data set after staking
             // TODO test scenario where dataset is added before staking
             contract.provider_add_dataset(root).ok();
@@ -1804,7 +1720,6 @@ mod prosopo {
             contract.dapp_register(client_origin, dapp_contract_account, None);
 
             //Dapp User commit
-            let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
             contract
                 .dapp_user_commit(dapp_contract_account, root, user_root, provider_account)
@@ -1839,7 +1754,7 @@ mod prosopo {
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             let root = str_to_hash("merkle tree root".to_string());
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
-            contract.provider_stake();
+            contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
             // can only add data set after staking
             contract.provider_add_dataset(root).ok();
 
@@ -1916,7 +1831,7 @@ mod prosopo {
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             let root = str_to_hash("merkle tree root".to_string());
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
-            contract.provider_stake();
+            contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
             // can only add data set after staking
             // TODO test scenario where dataset is added before staking
             contract.provider_add_dataset(root).ok();
@@ -1972,7 +1887,7 @@ mod prosopo {
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             let root = str_to_hash("merkle tree root".to_string());
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
-            contract.provider_stake();
+            contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
             // can only add data set after staking
             contract.provider_add_dataset(root).ok();
 
@@ -2048,7 +1963,7 @@ mod prosopo {
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             let root = str_to_hash("merkle tree root".to_string());
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
-            contract.provider_stake();
+            contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
             // can only add data set after staking
             contract.provider_add_dataset(root).ok();
 
@@ -2125,9 +2040,11 @@ mod prosopo {
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Dapp, provider_account);
             let registered_provider_account = contract.providers.get(&provider_account);
-            let selected_provider = contract.get_random_provider();
+            let selected_provider = contract.get_random_active_provider();
             assert!(selected_provider.unwrap() == registered_provider_account.unwrap());
         }
+
+        //TODO test provider_change_status
 
         /// Helper function for converting string to Hash
         fn str_to_hash(str: String) -> Hash {
