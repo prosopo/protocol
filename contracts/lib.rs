@@ -24,7 +24,7 @@ mod prosopo {
     use rand_chacha::rand_core::RngCore;
     use rand_chacha::rand_core::SeedableRng;
     use rand_chacha::ChaChaRng;
-
+    use num_traits::float::FloatCore;
     use ink_storage::{
         lazy::Mapping, traits::PackedLayout, traits::SpreadAllocate, traits::SpreadLayout,
         traits::StorageLayout,
