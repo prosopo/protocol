@@ -19,14 +19,15 @@ use ink_lang as ink;
 #[ink::contract]
 mod prosopo {
     use ink_prelude::collections::btree_set::BTreeSet;
-    use ink_prelude::vec::Vec as Vec;
+    use ink_prelude::vec::Vec;
+
     use rand_chacha::rand_core::RngCore;
     use rand_chacha::rand_core::SeedableRng;
     use rand_chacha::ChaChaRng;
+
     use ink_storage::{
         lazy::Mapping, traits::PackedLayout, traits::SpreadAllocate, traits::SpreadLayout,
         traits::StorageLayout,
-        //Vec not compatible yet
     };
 
     #[derive(
@@ -71,11 +72,6 @@ mod prosopo {
         fn default() -> Self {
             GovernanceStatus::Deactivated
         }
-    }
-
-    impl Default for CaptchaStatus {
-        fn default() -> Self {
-            CaptchaStatus::Disapproved }
     }
 
     impl Default for CaptchaStatus {
@@ -453,7 +449,6 @@ mod prosopo {
             self.operator_accounts.push(operator_account);
         }
 
-
         /// Register a provider, their service origin and fee
         #[ink(message)]
         pub fn provider_register(
@@ -628,7 +623,6 @@ mod prosopo {
             Ok(())
         }
 
-
         // TODO allow Provider to unstake(withdraw) less than they have staked
         /// Unstake and deactivate the provider's service, returning stake
         #[ink(message)]
@@ -655,10 +649,7 @@ mod prosopo {
 
         /// Add a new data set
         #[ink(message)]
-        pub fn provider_add_dataset(
-            &mut self,
-            merkle_tree_root: Hash,
-        ) -> Result<(), ProsopoError> {
+        pub fn provider_add_dataset(&mut self, merkle_tree_root: Hash) -> Result<(), ProsopoError> {
             let provider_id = self.env().caller();
             // the calling account must belong to the provider
             // TODO add Prosopo operators? Currently, only a provider can add a data set for themselves.
@@ -900,9 +891,8 @@ mod prosopo {
             self.validate_provider(caller)?;
             let provider = self.providers.get(&caller).unwrap();
             // Guard against incorrect solution id
-            let commitment = self.get_captcha_solution_commitment(
-                captcha_solution_commitment_id,
-            )?;
+            let commitment =
+                self.get_captcha_solution_commitment(captcha_solution_commitment_id)?;
             if commitment.provider != caller {
                 return Err(ProsopoError::NotAuthorised);
             }
@@ -943,9 +933,8 @@ mod prosopo {
             self.validate_provider(caller)?;
             let provider = self.providers.get(&caller).unwrap();
             // Guard against incorrect solution id
-            let commitment = self.get_captcha_solution_commitment(
-                captcha_solution_commitment_id,
-            )?;
+            let commitment =
+                self.get_captcha_solution_commitment(captcha_solution_commitment_id)?;
             if commitment.provider != caller {
                 return Err(ProsopoError::NotAuthorised);
             }
