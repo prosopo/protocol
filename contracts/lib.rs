@@ -20,22 +20,28 @@ use ink_lang as ink;
 mod prosopo {
     use ink_prelude::collections::btree_set::BTreeSet;
     use ink_prelude::vec::Vec as Vec;
+    use rand_chacha::rand_core::RngCore;
+    use rand_chacha::rand_core::SeedableRng;
+    use rand_chacha::ChaChaRng;
     use ink_storage::{
-        lazy::Mapping,
-        traits::PackedLayout,
-        traits::SpreadAllocate,
-        traits::SpreadLayout,
+        lazy::Mapping, traits::PackedLayout, traits::SpreadAllocate, traits::SpreadLayout,
         traits::StorageLayout,
         //Vec not compatible yet
     };
 
     #[derive(
-    PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, SpreadLayout, PackedLayout, SpreadAllocate
+        PartialEq,
+        Debug,
+        Eq,
+        Clone,
+        Copy,
+        scale::Encode,
+        scale::Decode,
+        SpreadLayout,
+        PackedLayout,
+        SpreadAllocate,
     )]
-    #[cfg_attr(
-    feature = "std",
-    derive(scale_info::TypeInfo, StorageLayout)
-    )]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum GovernanceStatus {
         Active,
         Suspended,
@@ -43,16 +49,16 @@ mod prosopo {
     }
 
     #[derive(
-    PartialEq,
-    Debug,
-    Eq,
-    Clone,
-    Copy,
-    scale::Encode,
-    scale::Decode,
-    SpreadLayout,
-    PackedLayout,
-    SpreadAllocate,
+        PartialEq,
+        Debug,
+        Eq,
+        Clone,
+        Copy,
+        scale::Encode,
+        scale::Decode,
+        SpreadLayout,
+        PackedLayout,
+        SpreadAllocate,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum CaptchaStatus {
@@ -62,7 +68,14 @@ mod prosopo {
     }
 
     impl Default for GovernanceStatus {
-        fn default() -> Self { GovernanceStatus::Deactivated }
+        fn default() -> Self {
+            GovernanceStatus::Deactivated
+        }
+    }
+
+    impl Default for CaptchaStatus {
+        fn default() -> Self {
+            CaptchaStatus::Disapproved }
     }
 
     impl Default for CaptchaStatus {
@@ -72,12 +85,18 @@ mod prosopo {
     }
 
     #[derive(
-    PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, SpreadLayout, PackedLayout, SpreadAllocate
+        PartialEq,
+        Debug,
+        Eq,
+        Clone,
+        Copy,
+        scale::Encode,
+        scale::Decode,
+        SpreadLayout,
+        PackedLayout,
+        SpreadAllocate,
     )]
-    #[cfg_attr(
-    feature = "std",
-    derive(scale_info::TypeInfo, StorageLayout)
-    )]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum Payee {
         Provider,
         Dapp,
@@ -85,16 +104,24 @@ mod prosopo {
     }
 
     impl Default for Payee {
-        fn default() -> Self { Payee::None }
+        fn default() -> Self {
+            Payee::None
+        }
     }
 
     #[derive(
-    PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode, SpreadLayout, PackedLayout, SpreadAllocate, Copy
+        PartialEq,
+        Debug,
+        Eq,
+        Clone,
+        scale::Encode,
+        scale::Decode,
+        SpreadLayout,
+        PackedLayout,
+        SpreadAllocate,
+        Copy,
     )]
-    #[cfg_attr(
-    feature = "std",
-    derive(scale_info::TypeInfo, StorageLayout)
-    )]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Provider {
         // TODO how is the Status updated if the staked amount drops below the allowed minimum?
         //    Should Status instead be a function that returns Active if staked > provider_stake_default
@@ -109,25 +136,36 @@ mod prosopo {
         captcha_dataset_id: Hash,
     }
 
-
     #[derive(
-    PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, SpreadLayout, PackedLayout, SpreadAllocate
+        PartialEq,
+        Debug,
+        Eq,
+        Clone,
+        Copy,
+        scale::Encode,
+        scale::Decode,
+        SpreadLayout,
+        PackedLayout,
+        SpreadAllocate,
     )]
-    #[cfg_attr(
-    feature = "std",
-    derive(scale_info::TypeInfo, StorageLayout)
-    )]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Operator {
         status: GovernanceStatus,
     }
 
     #[derive(
-    PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, SpreadLayout, PackedLayout, SpreadAllocate,
+        PartialEq,
+        Debug,
+        Eq,
+        Clone,
+        Copy,
+        scale::Encode,
+        scale::Decode,
+        SpreadLayout,
+        PackedLayout,
+        SpreadAllocate,
     )]
-    #[cfg_attr(
-    feature = "std",
-    derive(scale_info::TypeInfo, StorageLayout)
-    )]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct CaptchaData {
         provider: AccountId,
         merkle_tree_root: Hash,
@@ -135,12 +173,18 @@ mod prosopo {
     }
 
     #[derive(
-    PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, SpreadLayout, PackedLayout, SpreadAllocate,
+        PartialEq,
+        Debug,
+        Eq,
+        Clone,
+        Copy,
+        scale::Encode,
+        scale::Decode,
+        SpreadLayout,
+        PackedLayout,
+        SpreadAllocate,
     )]
-    #[cfg_attr(
-    feature = "std",
-    derive(scale_info::TypeInfo, StorageLayout)
-    )]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct CaptchaSolutionCommitment {
         // the Dapp User Account
         account: AccountId,
@@ -155,12 +199,18 @@ mod prosopo {
     }
 
     #[derive(
-    PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode, SpreadLayout, PackedLayout, SpreadAllocate, Copy
+        PartialEq,
+        Debug,
+        Eq,
+        Clone,
+        scale::Encode,
+        scale::Decode,
+        SpreadLayout,
+        PackedLayout,
+        SpreadAllocate,
+        Copy,
     )]
-    #[cfg_attr(
-    feature = "std",
-    derive(scale_info::TypeInfo, StorageLayout)
-    )]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Dapp {
         status: GovernanceStatus,
         // TODO should balances be stored in self.balances under an owner, as per ERC20?
@@ -171,14 +221,19 @@ mod prosopo {
         client_origin: Hash,
     }
 
-
     #[derive(
-    PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode, SpreadLayout, PackedLayout, SpreadAllocate, Copy
+        PartialEq,
+        Debug,
+        Eq,
+        Clone,
+        scale::Encode,
+        scale::Decode,
+        SpreadLayout,
+        PackedLayout,
+        SpreadAllocate,
+        Copy,
     )]
-    #[cfg_attr(
-    feature = "std",
-    derive(scale_info::TypeInfo, StorageLayout)
-    )]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct User {
         correct_captchas: u64,
         incorrect_captchas: u64,
@@ -386,14 +441,14 @@ mod prosopo {
         /// Constructor
         #[ink(constructor)]
         pub fn default(operator: AccountId) -> Self {
-            ink_lang::codegen::initialize_contract(|contract| {
-                Self::new_init(contract, operator)
-            })
+            ink_lang::codegen::initialize_contract(|contract| Self::new_init(contract, operator))
         }
 
         /// Default initializes the contract with the specified initial supply.
         fn new_init(&mut self, operator_account: AccountId) {
-            let operator = Operator { status: GovernanceStatus::Active };
+            let operator = Operator {
+                status: GovernanceStatus::Active,
+            };
             self.operators.insert(operator_account, &operator);
             self.operator_accounts.push(operator_account);
         }
@@ -408,7 +463,7 @@ mod prosopo {
             payee: Payee,
             provider_account: AccountId,
         ) -> Result<(), ProsopoError> {
-            let caller = self.env().caller();
+            // let caller = self.env().caller();
             // TODO eventually remove operator checks to allow anyone to signup
             // if !self.operators.get(&caller) {
             //     return Err(ProsopoError::NotAuthorised);
@@ -461,9 +516,7 @@ mod prosopo {
                 return Err(ProsopoError::ProviderDoesNotExist);
             }
 
-            let existing = self
-                .get_provider_details(provider_account)
-                .unwrap();
+            let existing = self.get_provider_details(provider_account).unwrap();
             let transferred = self.env().transferred_value();
 
             let mut balance = existing.balance;
@@ -495,7 +548,10 @@ mod prosopo {
 
         /// De-Register a provider by setting their status to Deactivated
         #[ink(message)]
-        pub fn provider_deregister(&mut self, provider_account: AccountId) -> Result<(), ProsopoError> {
+        pub fn provider_deregister(
+            &mut self,
+            provider_account: AccountId,
+        ) -> Result<(), ProsopoError> {
             //TODO could get rid of provider_account parameter
             let caller = self.env().caller();
             if caller == provider_account {
@@ -806,7 +862,8 @@ mod prosopo {
 
             self.create_new_dapp_user(caller);
 
-            self.captcha_solution_commitments.insert(user_merkle_tree_root, &commitment);
+            self.captcha_solution_commitments
+                .insert(user_merkle_tree_root, &commitment);
 
             self.env().emit_event(DappUserCommit {
                 account: caller,
@@ -853,18 +910,19 @@ mod prosopo {
 
             self.get_dapp_user(commitment.account)?;
 
-
             // get the mutables
             let mut commitment_mut = self
                 .captcha_solution_commitments
-                .get(&captcha_solution_commitment_id).unwrap();
+                .get(&captcha_solution_commitment_id)
+                .unwrap();
             let mut user = self.dapp_users.get(&commitment.account).unwrap();
 
             // only make changes if commitment is Pending approval or disapproval
             if commitment_mut.status == CaptchaStatus::Pending {
                 commitment_mut.status = CaptchaStatus::Approved;
                 user.correct_captchas += 1;
-                self.captcha_solution_commitments.insert(captcha_solution_commitment_id, &commitment_mut);
+                self.captcha_solution_commitments
+                    .insert(captcha_solution_commitment_id, &commitment_mut);
                 self.dapp_users.insert(&commitment.account, &user);
                 self.pay_fee(&caller, &commitment.contract)?;
                 self.env().emit_event(ProviderApprove {
@@ -895,7 +953,6 @@ mod prosopo {
             // Check the user exists
             self.get_dapp_user(commitment.account)?;
 
-
             // get the mutables
             let mut commitment_mut = self
                 .captcha_solution_commitments
@@ -907,7 +964,8 @@ mod prosopo {
             if commitment_mut.status == CaptchaStatus::Pending {
                 commitment_mut.status = CaptchaStatus::Disapproved;
                 user.incorrect_captchas += 1;
-                self.captcha_solution_commitments.insert(captcha_solution_commitment_id, &commitment_mut);
+                self.captcha_solution_commitments
+                    .insert(captcha_solution_commitment_id, &commitment_mut);
                 self.dapp_users.insert(&commitment.account, &user);
                 self.pay_fee(&caller, &commitment.contract)?;
                 self.env().emit_event(ProviderDisapprove {
@@ -919,7 +977,11 @@ mod prosopo {
         }
 
         /// Transfer a balance from a provider to a dapp or from a dapp to a provider,
-        fn pay_fee(&mut self, provider_account: &AccountId, dapp_account: &AccountId) -> Result<(), ProsopoError> {
+        fn pay_fee(
+            &mut self,
+            provider_account: &AccountId,
+            dapp_account: &AccountId,
+        ) -> Result<(), ProsopoError> {
             let mut provider = self.providers.get(provider_account).unwrap();
             if provider.fee != 0 {
                 let mut dapp = self.dapps.get(dapp_account).unwrap();
@@ -940,7 +1002,6 @@ mod prosopo {
             }
             Ok(())
         }
-
 
         // Checks if the user is a human (true) as they have a solution rate higher than a % threshold or a bot (false)
         // Threshold is decided by the calling user
@@ -965,7 +1026,9 @@ mod prosopo {
         pub fn add_prosopo_operator(&mut self, operator_account: AccountId) {
             let caller = self.env().caller();
             if self.operators.get(&caller).is_some() {
-                let operator = Operator { status: GovernanceStatus::Active };
+                let operator = Operator {
+                    status: GovernanceStatus::Active,
+                };
                 self.operators.insert(operator_account, &operator);
                 self.operator_accounts.push(operator_account);
             }
@@ -973,10 +1036,7 @@ mod prosopo {
 
         /// Informational / Validation functions
 
-        fn validate_provider(
-            &self,
-            provider_id: AccountId,
-        ) -> Result<(), ProsopoError> {
+        fn validate_provider(&self, provider_id: AccountId) -> Result<(), ProsopoError> {
             if self.providers.get(&provider_id).is_none() {
                 ink_env::debug_println!("{}", "ProviderDoesNotExist");
                 return Err(ProsopoError::ProviderDoesNotExist);
@@ -1025,7 +1085,8 @@ mod prosopo {
         ) -> Result<CaptchaSolutionCommitment, ProsopoError> {
             if self
                 .captcha_solution_commitments
-                .get(&captcha_solution_commitment_id).is_none()
+                .get(&captcha_solution_commitment_id)
+                .is_none()
             {
                 return Err(ProsopoError::CaptchaSolutionCommitmentDoesNotExist);
             }
@@ -1053,10 +1114,7 @@ mod prosopo {
         ///
         /// Returns an error if the user does not exist
         #[ink(message)]
-        pub fn get_provider_details(
-            &self,
-            accountid: AccountId,
-        ) -> Result<Provider, ProsopoError> {
+        pub fn get_provider_details(&self, accountid: AccountId) -> Result<Provider, ProsopoError> {
             if self.providers.get(&accountid).is_none() {
                 ink_env::debug_println!("{}", "ProviderDoesNotExist");
                 return Err(ProsopoError::ProviderDoesNotExist);
@@ -1084,8 +1142,8 @@ mod prosopo {
         #[ink(message)]
         pub fn get_dapp_balance(&self, dapp: AccountId) -> Balance {
             return match self.get_dapp_details(dapp) {
-                Ok(v) => { v.balance }
-                Err(_e) => Balance::from(0_u32)
+                Ok(v) => v.balance,
+                Err(_e) => Balance::from(0_u32),
             };
         }
 
@@ -1095,8 +1153,8 @@ mod prosopo {
         #[ink(message)]
         pub fn get_provider_balance(&self, provider: AccountId) -> Balance {
             return match self.get_provider_details(provider) {
-                Ok(v) => { v.balance }
-                Err(_e) => Balance::from(0_u32)
+                Ok(v) => v.balance,
+                Err(_e) => Balance::from(0_u32),
             };
         }
 
@@ -1116,7 +1174,6 @@ mod prosopo {
             providers
         }
 
-
         /// List providers given an array of status
         ///
         /// Returns empty if none were matched
@@ -1134,40 +1191,21 @@ mod prosopo {
             providers
         }
 
-        /// Return a random number between start and end, based on optional seed
+        /// Get a random active provider
         ///
-        /// Returns integer
-        fn random_index(&self, start: usize, end: usize, seed: Option<AccountId>) -> u8 {
-            fn max_index(array: &[u8]) -> usize {
-                let mut result = 0;
-
-                for (index, &value) in array.iter().enumerate() {
-                    if value > array[result] {
-                        result = index;
-                    }
-                }
-                result
-            }
-            let seed2 = &seed.unwrap_or_default();
-            ink_env::debug_println!("Seed {:?}", seed2);
-            let arr = self.env().random(&[0x02]).0;
-            return max_index(&arr.as_ref()[start..end]).try_into().unwrap();
-        }
-
-        /// Return a random active provider
-        ///
-        /// Returns error if there are no active providers
+        /// Returns error if no active providers is found
         #[ink(message)]
         pub fn get_random_active_provider(&self) -> Result<Provider, ProsopoError> {
-            let active_provider_ids = self
+            let active_providers = self
                 .provider_accounts
                 .get(GovernanceStatus::Active)
-                .unwrap_or_default();
-            if active_provider_ids.is_empty() {
+                .unwrap();
+            let max = active_providers.len();
+            if max == 0 {
                 return Err(ProsopoError::NoActiveProviders);
             }
-            let rng = self.random_index(0 as usize, active_provider_ids.len(), Some(self.env().caller()));
-            let provider_id = active_provider_ids.into_iter().nth(rng.into()).unwrap();
+            let index = self.get_random_number(0, (max - 1) as u64);
+            let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
             Ok(self.providers.get(provider_id).unwrap())
         }
 
@@ -1186,6 +1224,15 @@ mod prosopo {
             }
             provider_ids
         }
+
+        fn get_random_number(&self, min: u64, max: u64) -> u64 {
+            let random_seed = self.env().random(self.env().caller().as_ref());
+            let mut seed_converted: [u8; 32] = Default::default();
+            seed_converted.copy_from_slice(random_seed.0.as_ref());
+            let mut rng = ChaChaRng::from_seed(seed_converted);
+            ((rng.next_u64() as f64 / u64::MAX as f64) * (max - min) as f64 + min as f64).round()
+                as u64
+        }
     }
 
     /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
@@ -1194,7 +1241,6 @@ mod prosopo {
     #[cfg(not(feature = "ink-experimental-engine"))]
     #[cfg(test)]
     mod tests {
-        use ink_env::{call, test};
         /// Imports `ink_lang` so we can use `#[ink::test]`.
         use ink_env::hash::Blake2x256;
         use ink_env::hash::CryptoHash;
@@ -1242,7 +1288,7 @@ mod prosopo {
             assert!(contract.providers.get(&provider_account).is_some());
             contract.provider_deregister(provider_account);
             let provider_record = contract.providers.get(&provider_account).unwrap();
-            assert!(provider_record.status == GovernanceStatus::Deactivated);
+            assert!(provider_record.status == Status::Deactivated);
         }
 
         /// Test list providers
@@ -1258,6 +1304,20 @@ mod prosopo {
             assert!(registered_provider_account.is_some());
             let returned_list = contract.list_providers_by_ids(vec![provider_account]);
             assert!(returned_list == vec![registered_provider_account.unwrap()]);
+        }
+
+        // Test get random number
+        #[ink::test]
+        fn test_get_random_number() {
+            let operator_account = AccountId::from([0x1; 32]);
+            let contract = Prosopo::default(operator_account);
+            let mut number = contract.get_random_number(1, 128);
+            ink_env::debug_println!("{}", number);
+            assert!((1 <= number) && (number <= 128));
+
+            number = contract.get_random_number(0, 1);
+            ink_env::debug_println!("{}", number);
+            assert!(number == 0 || number == 1);
         }
 
         /// Helper function for converting string to Hash
@@ -1344,16 +1404,15 @@ mod prosopo {
                 <Event as scale::Decode>::decode(&mut &event_provider_update.data[..])
                     .expect("encountered invalid contract event data buffer");
 
-            if let Event::ProviderUpdate(ProviderUpdate { account }) =
-            decoded_event_update
-            {
+            if let Event::ProviderUpdate(ProviderUpdate { account }) = decoded_event_update {
                 assert_eq!(
                     account, provider_account,
                     "encountered invalid ProviderUpdate.account"
                 );
             } else {
                 panic!(
-                    "encountered unexpected event kind: expected a ProviderUpdate event: {:?}", decoded_event_update
+                    "encountered unexpected event kind: expected a ProviderUpdate event: {:?}",
+                    decoded_event_update
                 );
             }
         }
@@ -1393,33 +1452,24 @@ mod prosopo {
                 <Event as scale::Decode>::decode(&mut &event_register.data[..])
                     .expect("encountered invalid contract event data buffer");
 
-            if let Event::ProviderRegister(ProviderRegister { account }) =
-            decoded_event_register
-            {
+            if let Event::ProviderRegister(ProviderRegister { account }) = decoded_event_register {
                 assert_eq!(
                     account, provider_account,
                     "encountered invalid ProviderStake.account"
                 );
             } else {
-                panic!(
-                    "encountered unexpected event kind: expected a ProviderRegister event"
-                );
+                panic!("encountered unexpected event kind: expected a ProviderRegister event");
             }
 
             let decoded_event_stake = <Event as scale::Decode>::decode(&mut &event_stake.data[..])
                 .expect("encountered invalid contract event data buffer");
 
-            if let Event::ProviderStake(ProviderStake { account, value }) =
-            decoded_event_stake
-            {
+            if let Event::ProviderStake(ProviderStake { account, value }) = decoded_event_stake {
                 assert_eq!(
                     account, provider_account,
                     "encountered invalid ProviderStake.account"
                 );
-                assert_eq!(
-                    value, balance,
-                    "encountered invalid ProviderStake.value"
-                );
+                assert_eq!(value, balance, "encountered invalid ProviderStake.value");
             } else {
                 panic!("encountered unexpected event kind: expected a ProviderStake event");
             }
@@ -1458,18 +1508,18 @@ mod prosopo {
                     .expect("encountered invalid contract event data buffer");
 
             if let Event::ProviderUnstake(ProviderUnstake { account, value }) =
-            decoded_event_unstake
+                decoded_event_unstake
             {
                 assert_eq!(
                     account, provider_account,
                     "encountered invalid ProviderUnstake.account"
                 );
-                assert_eq!(
-                    value, balance,
-                    "encountered invalid ProviderUnstake.value"
-                );
+                assert_eq!(value, balance, "encountered invalid ProviderUnstake.value");
             } else {
-                panic!("encountered unexpected event kind: expected a ProviderUnstake event {:?}", decoded_event_unstake);
+                panic!(
+                    "encountered unexpected event kind: expected a ProviderUnstake event {:?}",
+                    decoded_event_unstake
+                );
             }
         }
 
@@ -1507,9 +1557,9 @@ mod prosopo {
                     .expect("encountered invalid contract event data buffer");
 
             if let Event::ProviderAddDataset(ProviderAddDataset {
-                                                 account,
-                                                 merkle_tree_root,
-                                             }) = decoded_event_unstake
+                account,
+                merkle_tree_root,
+            }) = decoded_event_unstake
             {
                 assert_eq!(
                     account, provider_account,
@@ -1520,9 +1570,7 @@ mod prosopo {
                     "encountered invalid ProviderAddDataset.merkle_tree_root"
                 );
             } else {
-                panic!(
-                    "encountered unexpected event kind: expected a ProviderAddDataset event"
-                );
+                panic!("encountered unexpected event kind: expected a ProviderAddDataset event");
             }
         }
 
@@ -1662,7 +1710,6 @@ mod prosopo {
             assert!(contract.dapp_accounts.contains(&dapp_contract_account));
         }
 
-
         /// Test dapp fund account
         #[ink::test]
         fn test_dapp_fund() {
@@ -1775,7 +1822,10 @@ mod prosopo {
                 .ok();
 
             // check that the data is in the captcha_solution_commitments hashmap
-            assert!(contract.captcha_solution_commitments.get(&user_root).is_some());
+            assert!(contract
+                .captcha_solution_commitments
+                .get(&user_root)
+                .is_some());
         }
 
         /// Test provider approve
@@ -1845,8 +1895,14 @@ mod prosopo {
                 .get(&solution_id)
                 .unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Approved);
-            assert_eq!(balance - Balance::from(fee), contract.get_dapp_balance(dapp_contract_account));
-            assert_eq!(balance + Balance::from(fee), contract.get_provider_balance(provider_account));
+            assert_eq!(
+                balance - Balance::from(fee),
+                contract.get_dapp_balance(dapp_contract_account)
+            );
+            assert_eq!(
+                balance + Balance::from(fee),
+                contract.get_provider_balance(provider_account)
+            );
         }
 
         /// Test provider cannot approve invalid solution id
@@ -1971,8 +2027,14 @@ mod prosopo {
                 .get(&solution_id)
                 .unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Disapproved);
-            assert_eq!(balance - Balance::from(fee), contract.get_dapp_balance(dapp_contract_account));
-            assert_eq!(balance + Balance::from(fee), contract.get_provider_balance(provider_account));
+            assert_eq!(
+                balance - Balance::from(fee),
+                contract.get_dapp_balance(dapp_contract_account)
+            );
+            assert_eq!(
+                balance + Balance::from(fee),
+                contract.get_provider_balance(provider_account)
+            );
         }
 
         /// Test dapp user is human
@@ -2059,6 +2121,25 @@ mod prosopo {
             assert_eq!(0, contract.get_provider_balance(provider_account));
         }
 
+        // Test get random provider
+        #[ink::test]
+        fn test_get_random_active_provider() {
+            let operator_account = AccountId::from([0x1; 32]);
+            let mut contract = Prosopo::default(operator_account);
+            let provider_account = AccountId::from([0x2; 32]);
+            let service_origin = str_to_hash("https://localhost:2424".to_string());
+            let fee: u32 = 0;
+            contract.provider_register(service_origin, fee, Payee::Provider, provider_account);
+            let fee2: u32 = 100;
+            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
+            let balance = 1000;
+            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            contract.provider_update(service_origin, fee, Payee::Dapp, provider_account);
+            let registered_provider_account = contract.providers.get(&provider_account);
+            let selected_provider = contract.get_random_provider();
+            assert!(selected_provider.unwrap() == registered_provider_account.unwrap());
+        }
+
         /// Helper function for converting string to Hash
         fn str_to_hash(str: String) -> Hash {
             let mut result = Hash::default();
@@ -2071,4 +2152,3 @@ mod prosopo {
         }
     }
 }
-
