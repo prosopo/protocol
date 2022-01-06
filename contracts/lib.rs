@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
+#![feature(derive_default_enum)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use ink_lang as ink;
@@ -23,13 +23,13 @@ mod prosopo {
     use rand_chacha::rand_core::RngCore;
     use rand_chacha::rand_core::SeedableRng;
     use rand_chacha::ChaChaRng;
-    use num_traits::float::FloatCore;
     use ink_storage::{
         lazy::Mapping, traits::PackedLayout, traits::SpreadAllocate, traits::SpreadLayout,
         traits::StorageLayout,
     };
 
     #[derive(
+    Default,
     PartialEq,
     Debug,
     Eq,
@@ -45,10 +45,12 @@ mod prosopo {
     pub enum GovernanceStatus {
         Active,
         Suspended,
+        #[default]
         Deactivated,
     }
 
     #[derive(
+    Default,
     PartialEq,
     Debug,
     Eq,
@@ -64,22 +66,13 @@ mod prosopo {
     pub enum CaptchaStatus {
         Pending,
         Approved,
+        #[default]
         Disapproved,
     }
 
-    impl Default for GovernanceStatus {
-        fn default() -> Self {
-            GovernanceStatus::Deactivated
-        }
-    }
-
-    impl Default for CaptchaStatus {
-        fn default() -> Self {
-            CaptchaStatus::Disapproved
-        }
-    }
 
     #[derive(
+    Default,
     PartialEq,
     Debug,
     Eq,
@@ -95,14 +88,11 @@ mod prosopo {
     pub enum Payee {
         Provider,
         Dapp,
+        // TODO how does this work if not specified as Provider or Dapp
+        #[default]
         None,
     }
 
-    impl Default for Payee {
-        fn default() -> Self {
-            Payee::None
-        }
-    }
 
     #[derive(
     PartialEq,
@@ -1193,8 +1183,7 @@ mod prosopo {
             let mut seed_converted: [u8; 32] = Default::default();
             seed_converted.copy_from_slice(random_seed.0.as_ref());
             let mut rng = ChaChaRng::from_seed(seed_converted);
-            ((rng.next_u64() as f64 / u64::MAX as f64) * (max - min) as f64 + min as f64).round()
-                as u64
+            ((rng.next_u64() / u64::MAX) * (max - min) + min) as u64
         }
     }
 
