@@ -455,7 +455,7 @@ mod prosopo {
             let balance: u128 = 0;
             // this function is for registration only
             if self.providers.get(&provider_account).is_some() {
-                return Err(ProsopoError::ProviderExists);
+                return Ok(())
             }
             // add a new provider
             let provider = Provider {
@@ -482,6 +482,7 @@ mod prosopo {
 
         /// Update an existing provider, their service origin, fee
         #[ink(message)]
+        #[ink(payable)]
         pub fn provider_update(
             &mut self,
             service_origin: Hash,
@@ -491,6 +492,7 @@ mod prosopo {
         ) -> Result<(), ProsopoError> {
             let caller = self.env().caller();
 
+            //TODO add operator check
             if !(caller == provider_account) {
                 return Err(ProsopoError::NotAuthorised);
             }
