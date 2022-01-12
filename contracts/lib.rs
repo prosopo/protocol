@@ -418,6 +418,8 @@ mod prosopo {
         CaptchaDataDoesNotExist,
         /// Returned if solution commitment does not exist when it should
         CaptchaSolutionCommitmentDoesNotExist,
+        /// Returned if solution commitment already exists when it should not
+        CaptchaSolutionCommitmentExists,
         /// Returned if dapp user does not exist when it should
         DappUserDoesNotExist,
         /// Returned if there are no active providers
@@ -809,8 +811,12 @@ mod prosopo {
         ) -> Result<(), Error> {
             let caller = self.env().caller();
             // Guard against incorrect data being submitted
-            if self.captcha_data.get(&captcha_dataset_id).is_none() {
-                return Err(Error::CaptchaDataDoesNotExist);
+            self.get_captcha_data(captcha_dataset_id)?;
+            // Guard against solution commitment being submitted more than once
+            if self.captcha_solution_commitments.get(user_merkle_tree_root).is_some() {
+                ink_env::debug_println!("{}", "CaptchaSolutionCommitmentExists");
+                //return Err(Error::CaptchaSolutionCommitmentExists);
+                return Ok(())
             }
 
             self.validate_dapp(contract)?;
@@ -1031,7 +1037,6 @@ mod prosopo {
                 ink_env::debug_println!("{}", "DappInsufficientFunds");
                 return Err(Error::DappInsufficientFunds);
             }
-            //ink_env::debug_println!("{}","dapp has validated");
             Ok(())
         }
 
