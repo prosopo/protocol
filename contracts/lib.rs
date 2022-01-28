@@ -1409,9 +1409,7 @@ pub mod prosopo {
                     "encountered invalid ProviderUpdate.account"
                 );
             } else {
-                panic!(
-                    "encountered unexpected event kind: expected a ProviderUpdate event"
-                );
+                panic!("encountered unexpected event kind: expected a ProviderUpdate event");
             }
         }
 
@@ -1535,9 +1533,7 @@ pub mod prosopo {
                 );
                 assert_eq!(value, balance, "encountered invalid ProviderUnstake.value");
             } else {
-                panic!(
-                    "encountered unexpected event kind: expected a ProviderUnstake event"
-                );
+                panic!("encountered unexpected event kind: expected a ProviderUnstake event");
             }
         }
 
