@@ -34,6 +34,7 @@ const definitions = {
             'ProviderDoesNotExist',
             'ProviderInsufficientFunds',
             'ProviderInactive',
+            'ProviderServiceOriginUsed',
             'DuplicateCaptchaDataId',
             'DappExists',
             'DappDoesNotExist',
