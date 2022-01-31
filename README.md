@@ -58,7 +58,7 @@ cargo +nightly tarpaulin --no-default-features --features std,ink-experimental-e
 
 ## Deploy
 
-The protocol repository is implemented as a [redspot](https://github.com/patractlabs/redspot) project. You can install dependencies and then run a script to deploy.
+The protocol repository is implemented as a [redspot](https://github.com/patractlabs/redspot) project. You can install dependencies and then run a script to deploy the contract.
 
 ```bash
 yarn && yarn deploy
