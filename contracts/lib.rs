@@ -227,19 +227,6 @@ pub mod prosopo {
         //last_correct_captcha_dapp_id: AccountId,
     }
 
-    pub enum DisputeType {
-        BadCaptchaData,
-        UnresolvedCaptchaSolution,
-        BotsFromProvider,
-        DappContractRegisteredByUnknown,
-    }
-
-    pub struct Dispute {
-        account: AccountId,
-        status: CaptchaStatus,
-        dispute_type: DisputeType,
-        proof: Hash,
-    }
 
     // Contract storage
     #[ink(storage)]
@@ -536,7 +523,7 @@ pub mod prosopo {
                 balance,
                 fee,
                 service_origin,
-                captcha_dataset_id: existing.captcha_dataset_id, //TODO should this be update-able here??
+                captcha_dataset_id: existing.captcha_dataset_id, //TODO should this be update-able here?? No, because inactive providers cannot add datasets
                 payee,
             };
 

@@ -1,6 +1,6 @@
 
 
-# Prosopo
+# Prosopo Protocol
 ![Coverage Badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/forgetso/4e3350c273f5173afc45b6ce74a97cb2/raw/protocol__heads_main.json)
 
 Prosopo Protocol smart contract repository.
@@ -56,3 +56,10 @@ cargo +nightly tarpaulin --no-default-features --features std --verbose -- --noc
 cargo +nightly tarpaulin --no-default-features --features std,ink-experimental-engine --verbose -- --nocapture
 ```
 
+## Deploy
+
+The protocol repository is implemented as a [redspot](https://github.com/patractlabs/redspot) project. You can install dependencies and then run a script to deploy.
+
+```bash
+yarn && yarn deploy
+```
