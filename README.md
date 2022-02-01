@@ -49,7 +49,7 @@ cargo +nightly contract build
 
 ## Test
 
-There are two sets of unit tests. Some use the standard test engine but most use the experimental engine.
+There are two sets of unit tests. Some use the standard test engine but most use the experimental engine. You can run the tests using the following commmands.
 
 ```bash
 cargo +nightly tarpaulin --no-default-features --features std --verbose -- --nocapture

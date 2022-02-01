@@ -605,7 +605,7 @@ pub mod prosopo {
                 let balance = provider.balance;
                 if balance > 0 {
                     self.env().transfer(caller, balance).ok();
-                    self.provider_deregister(caller);
+                    self.provider_deregister(caller)?;
                     self.env().emit_event(ProviderUnstake {
                         account: caller,
                         value: balance,
@@ -1355,7 +1355,7 @@ pub mod prosopo {
         fn test_provider_register_and_update() {
             let operator_account = AccountId::from([0x1; 32]);
             let mut contract = Prosopo::default(operator_account);
-            let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
+            let (provider_account, service_origin, fee) = generate_provider_data(0x2, "2424", 0);
             contract
                 .provider_register(service_origin, fee, Payee::Provider, provider_account)
                 .unwrap();
