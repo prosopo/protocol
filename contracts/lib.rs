@@ -391,6 +391,8 @@ pub mod prosopo {
         NotAuthorised,
         /// Returned if not enough contract balance to fulfill a request is available.
         ContractInsufficientFunds,
+        /// Returned when the contract to address transfer fails
+        ContractTransferFailed,
         /// Returned if provider exists when it shouldn't
         ProviderExists,
         /// Returned if provider does not exist when it should
@@ -421,8 +423,6 @@ pub mod prosopo {
         DappUserDoesNotExist,
         /// Returned if there are no active providers
         NoActiveProviders,
-        /// Returned when the contract to address transfer fails
-        TransferFailed,
     }
 
     impl Prosopo {
@@ -1013,7 +1013,7 @@ pub mod prosopo {
                 self.providers.insert(commitment.provider, &provider);
             }
             if self.env().transfer(commitment.account, amount).is_err() {
-                return Err(Error::TransferFailed);
+                return Err(Error::ContractTransferFailed);
             }
             Ok(())
         }
