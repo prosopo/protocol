@@ -883,7 +883,7 @@ pub mod prosopo {
         pub fn provider_approve(
             &mut self,
             captcha_solution_commitment_id: Hash,
-            refund_fee: Balance,
+            transaction_fee: Balance,
         ) -> Result<(), Error> {
             let caller = self.env().caller();
             self.validate_provider(caller)?;
@@ -912,7 +912,7 @@ pub mod prosopo {
                     .insert(captcha_solution_commitment_id, &commitment_mut);
                 self.dapp_users.insert(&commitment.account, &user);
                 self.pay_fee(&caller, &commitment.contract)?;
-                self.refund_fee(commitment.contract, commitment.account, refund_fee)?;
+                self.refund_transaction_fee(commitment, transaction_fee)?;
                 self.env().emit_event(ProviderApprove {
                     captcha_solution_commitment_id,
                 });
@@ -987,26 +987,36 @@ pub mod prosopo {
             Ok(())
         }
 
-        /// Transfer a refund fee from payee account to user account
-        fn refund_fee(
+        /// Transfer a refund fee from payer account to user account
+        /// Payee == Provider => Dapp pays solve fee and Dapp pays Dapp User tx fee
+        /// Payee == Dapp => Provider pays solve fee and Provider pays Dapp Use
+        fn refund_transaction_fee(
             &mut self,
-            dapp_account: AccountId,
-            user_account: AccountId,
+            commitment: CaptchaSolutionCommitment,
             amount: Balance,
         ) -> Result<(), Error> {
             if self.env().balance() < amount {
                 return Err(Error::InsufficientBalance);
             }
 
-            let mut dapp = self.dapps.get(&dapp_account).unwrap();
-            if dapp.balance < amount {
-                return Err(Error::InsufficientAllowance);
+            let mut provider = self.providers.get(&commitment.provider).unwrap();
+            let mut dapp = self.dapps.get(&commitment.contract).unwrap();
+            if provider.payee == Payee::Provider {
+                if dapp.balance < amount {
+                    return Err(Error::InsufficientAllowance);
+                }
+                dapp.balance -= amount;
+                self.dapps.insert(commitment.contract, &dapp);
+            } else {
+                if provider.balance < amount {
+                    return Err(Error::InsufficientAllowance);
+                }
+                provider.balance -= amount;
+                self.providers.insert(commitment.provider, &provider);
             }
-            dapp.balance -= amount;
-            if self.env().transfer(user_account, amount).is_err() {
+            if self.env().transfer(commitment.account, amount).is_err() {
                 return Err(Error::TransferFailed);
             }
-            self.dapps.insert(dapp_account, &dapp);
             Ok(())
         }
 
