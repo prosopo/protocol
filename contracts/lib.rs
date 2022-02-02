@@ -389,15 +389,13 @@ pub mod prosopo {
     pub enum Error {
         /// Returned if calling account is not authorised to perform action
         NotAuthorised,
-        /// Returned if not enough balance to fulfill a request is available.
-        InsufficientBalance,
-        /// Returned if not enough allowance to fulfill a request is available.
-        InsufficientAllowance,
+        /// Returned if not enough contract balance to fulfill a request is available.
+        ContractInsufficientFunds,
         /// Returned if provider exists when it shouldn't
         ProviderExists,
         /// Returned if provider does not exist when it should
         ProviderDoesNotExist,
-        /// Returned if provider has no funds
+        /// Returned if provider has insufficient funds to operate
         ProviderInsufficientFunds,
         /// Returned if provider is inactive and trying to use the service
         ProviderInactive,
@@ -411,7 +409,7 @@ pub mod prosopo {
         DappDoesNotExist,
         /// Returned if dapp is inactive and trying to use the service
         DappInactive,
-        /// Returned if dapp has no funds
+        /// Returned if dapp has insufficient funds to operate
         DappInsufficientFunds,
         /// Returned if captcha data does not exist
         CaptchaDataDoesNotExist,
@@ -996,20 +994,20 @@ pub mod prosopo {
             amount: Balance,
         ) -> Result<(), Error> {
             if self.env().balance() < amount {
-                return Err(Error::InsufficientBalance);
+                return Err(Error::ContractInsufficientFunds);
             }
 
             let mut provider = self.providers.get(&commitment.provider).unwrap();
             let mut dapp = self.dapps.get(&commitment.contract).unwrap();
             if provider.payee == Payee::Provider {
                 if dapp.balance < amount {
-                    return Err(Error::InsufficientAllowance);
+                    return Err(Error::DappInsufficientFunds);
                 }
                 dapp.balance -= amount;
                 self.dapps.insert(commitment.contract, &dapp);
             } else {
                 if provider.balance < amount {
-                    return Err(Error::InsufficientAllowance);
+                    return Err(Error::ProviderInsufficientFunds);
                 }
                 provider.balance -= amount;
                 self.providers.insert(commitment.provider, &provider);
