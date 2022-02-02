@@ -1830,6 +1830,9 @@ pub mod prosopo {
 
             // Register the provider
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
+            contract
+                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .unwrap();
 
             // Call from the provider account to add data and stake tokens
             let balance = 100;
@@ -1837,6 +1840,8 @@ pub mod prosopo {
             let root = str_to_hash("merkle tree root".to_string());
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
+
+            let provider = contract.providers.get(&provider_account).unwrap();
             // can only add data set after staking
             contract.provider_add_dataset(root).ok();
 
@@ -1901,6 +1906,9 @@ pub mod prosopo {
 
             // Register the provider
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
+            contract
+                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .unwrap();
 
             // Call from the provider account to add data and stake tokens
             let balance = 100;
@@ -1952,6 +1960,9 @@ pub mod prosopo {
 
             // Register the provider
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
+            contract
+                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .unwrap();
 
             // Call from the provider account to add data and stake tokens
             let balance = 100;
@@ -2023,6 +2034,9 @@ pub mod prosopo {
 
             // Register the provider
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
+            contract
+                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .unwrap();
 
             // Call from the provider account to add data and stake tokens
             let balance = 100;
