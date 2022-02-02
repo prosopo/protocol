@@ -423,6 +423,8 @@ pub mod prosopo {
         DappUserDoesNotExist,
         /// Returned if there are no active providers
         NoActiveProviders,
+        /// Returned when the contract to address transfer fails
+        TransferFailed,
     }
 
     impl Prosopo {
@@ -881,6 +883,7 @@ pub mod prosopo {
         pub fn provider_approve(
             &mut self,
             captcha_solution_commitment_id: Hash,
+            refund_fee: Balance,
         ) -> Result<(), Error> {
             let caller = self.env().caller();
             self.validate_provider(caller)?;
@@ -908,7 +911,14 @@ pub mod prosopo {
                 self.captcha_solution_commitments
                     .insert(captcha_solution_commitment_id, &commitment_mut);
                 self.dapp_users.insert(&commitment.account, &user);
-                self.pay_fee(&caller, &commitment.contract)?;
+                let pay_fee_result = self.pay_fee(&caller, &commitment.contract);
+                if pay_fee_result.is_err() {
+                    return pay_fee_result;
+                }
+                let refund_result = self.refund_fee(caller, commitment.account, refund_fee);
+                if refund_result.is_err() {
+                    return refund_result;
+                }
                 self.env().emit_event(ProviderApprove {
                     captcha_solution_commitment_id,
                 });
@@ -970,18 +980,38 @@ pub mod prosopo {
 
                 let fee = Balance::from(provider.fee);
                 if provider.payee == Payee::Provider {
-                    // add the fee to the provider's balance
-                    provider.balance = provider.balance + fee;
-                    dapp.balance = dapp.balance - fee;
+                    provider.balance += fee;
+                    dapp.balance -= fee;
                 }
                 if provider.payee == Payee::Dapp {
-                    // take the fee from the provider's balance
-                    provider.balance = provider.balance - fee;
-                    dapp.balance = dapp.balance + fee;
+                    provider.balance -= fee;
+                    dapp.balance += fee;
                 }
                 self.providers.insert(*provider_account, &provider);
                 self.dapps.insert(*dapp_account, &dapp);
             }
+            Ok(())
+        }
+
+        /// Transfer a refund fee from payee account to user account
+        fn refund_fee(
+            &mut self,
+            provider_account: AccountId,
+            user_account: AccountId,
+            amount: Balance,
+        ) -> Result<(), Error> {
+            let mut provider = self.providers.get(&provider_account).unwrap();
+            if self.env().balance() < amount {
+                return Err(Error::InsufficientBalance);
+            }
+            if provider.balance < amount {
+                return Err(Error::InsufficientAllowance);
+            }
+            provider.balance -= amount;
+            if self.env().transfer(user_account, amount).is_err() {
+                return Err(Error::TransferFailed);
+            }
+            self.providers.insert(provider_account, &provider);
             Ok(())
         }
 
