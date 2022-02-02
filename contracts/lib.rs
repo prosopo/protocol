@@ -911,14 +911,8 @@ pub mod prosopo {
                 self.captcha_solution_commitments
                     .insert(captcha_solution_commitment_id, &commitment_mut);
                 self.dapp_users.insert(&commitment.account, &user);
-                let pay_fee_result = self.pay_fee(&caller, &commitment.contract);
-                if pay_fee_result.is_err() {
-                    return pay_fee_result;
-                }
-                let refund_result = self.refund_fee(caller, commitment.account, refund_fee);
-                if refund_result.is_err() {
-                    return refund_result;
-                }
+                self.pay_fee(&caller, &commitment.contract)?;
+                self.refund_fee(commitment.contract, commitment.account, refund_fee)?;
                 self.env().emit_event(ProviderApprove {
                     captcha_solution_commitment_id,
                 });
@@ -996,22 +990,23 @@ pub mod prosopo {
         /// Transfer a refund fee from payee account to user account
         fn refund_fee(
             &mut self,
-            provider_account: AccountId,
+            dapp_account: AccountId,
             user_account: AccountId,
             amount: Balance,
         ) -> Result<(), Error> {
-            let mut provider = self.providers.get(&provider_account).unwrap();
             if self.env().balance() < amount {
                 return Err(Error::InsufficientBalance);
             }
-            if provider.balance < amount {
+
+            let mut dapp = self.dapps.get(&dapp_account).unwrap();
+            if dapp.balance < amount {
                 return Err(Error::InsufficientAllowance);
             }
-            provider.balance -= amount;
+            dapp.balance -= amount;
             if self.env().transfer(user_account, amount).is_err() {
                 return Err(Error::TransferFailed);
             }
-            self.providers.insert(provider_account, &provider);
+            self.dapps.insert(dapp_account, &dapp);
             Ok(())
         }
 
