@@ -32,6 +32,7 @@ pub mod prosopo {
     use rand_chacha::rand_core::SeedableRng;
     use rand_chacha::ChaChaRng;
 
+    /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(
         Default,
         PartialEq,
@@ -53,6 +54,7 @@ pub mod prosopo {
         Deactivated,
     }
 
+    /// CaptchaStatus is the status of a CaptchaSolutionCommitment, submitted by a DappUser
     #[derive(
         Default,
         PartialEq,
@@ -74,6 +76,7 @@ pub mod prosopo {
         Disapproved,
     }
 
+    /// Payee is the recipient of any fees that are paid when a CaptchaSolutionCommitment is approved
     #[derive(
         Default,
         PartialEq,
@@ -95,6 +98,8 @@ pub mod prosopo {
         None,
     }
 
+    /// Providers are suppliers of human verification methods (captchas, etc.) to DappUsers, either
+    /// paying or receiving a fee for this service.
     #[derive(
         PartialEq,
         Debug,
@@ -118,6 +123,7 @@ pub mod prosopo {
         captcha_dataset_id: Hash,
     }
 
+    /// RandomProvider is selected randomly by the contract for the client side application
     #[derive(scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub struct RandomProvider {
@@ -125,6 +131,7 @@ pub mod prosopo {
         block_number: u32,
     }
 
+    /// Operators are controllers of this contract with admin rights
     #[derive(
         PartialEq,
         Debug,
@@ -142,6 +149,8 @@ pub mod prosopo {
         status: GovernanceStatus,
     }
 
+    /// CaptchaData contains the hashed root of a Provider's dataset and is used to verify that
+    /// the captchas received by a DappUser did belong to the Provider's original dataset
     #[derive(
         PartialEq,
         Debug,
@@ -161,6 +170,9 @@ pub mod prosopo {
         captcha_type: u16,
     }
 
+    /// CaptchaSolutionCommitments are submitted by DAppUsers upon completion of one or more
+    /// Captchas. They serve as proof of captcha completion to the outside world and can be used
+    /// in dispute resolution.
     #[derive(
         PartialEq,
         Debug,
@@ -187,6 +199,8 @@ pub mod prosopo {
         provider: AccountId,
     }
 
+    /// DApps are distributed apps who want their users to be verified by Providers, either paying
+    /// or receiving a fee for this service.
     #[derive(
         PartialEq,
         Debug,
@@ -209,6 +223,8 @@ pub mod prosopo {
         client_origin: Hash,
     }
 
+    /// Users are the users of DApps that are required to be verified as human before they are
+    /// allowed to interact with the DApps' contracts.
     #[derive(
         PartialEq,
         Debug,
