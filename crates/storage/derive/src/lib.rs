@@ -1,53 +1,3 @@
-// Copyright 2018-2022 Parity Technologies (UK) Ltd.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-//! Custom derive for `ink_storage` traits.
-//!
-//! This crate provides helpers to define your very own custom storage data
-//! structures that work along the `ink_storage` data structures by implementing
-//! `SpreadLayout` and `PackedLayout` traits.
-//!
-//! See [Spread vs. Packed](https://paritytech.github.io/ink-docs/datastructures/spread-packed-layout)
-//! for more details of these two root strategies.
-//!
-//! # Examples
-//!
-//! ```no_run
-//! use ink_storage::traits::{SpreadLayout, push_spread_root};
-//! use ink_primitives::Key;
-//!
-//! # ink_env::test::run_test::<ink_env::DefaultEnvironment, _>(|_| {
-//! // Enum
-//! #[derive(SpreadLayout)]
-//! enum Vote {
-//!     Yes,
-//!     No
-//! }
-//!
-//! // Strucut
-//! #[derive(SpreadLayout)]
-//! struct NamedFields {
-//!     a: u32,
-//!     b: [u32; 32],
-//! };
-//!
-//! // Created a custom structure and told which key to update.
-//! push_spread_root(&NamedFields{ a: 123, b: [22; 32] }, &mut Key::from([0x42; 32]));
-//! # Ok(())
-//! # });
-//! ```
-
 extern crate proc_macro;
 
 mod enum_spread_allocate;
@@ -55,38 +5,5 @@ mod enum_spread_allocate;
 use self::enum_spread_allocate::enum_spread_allocate_derive;
 
 synstructure::decl_derive!(
-    [EnumSpreadAllocate] =>
-    /// Derives `ink_storage`'s `SpreadAllocate` trait for the given `struct`.
-    ///
-    /// # Note
-    ///
-    /// As of now `enum` types are not supported!
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ink_primitives::Key;
-    /// use ink_storage::traits::{
-    ///     SpreadAllocate,
-    ///     SpreadLayout,
-    ///     allocate_spread_root,
-    ///};
-    ///
-    /// #[derive(SpreadAllocate, SpreadLayout)]
-    /// # #[derive(Debug, PartialEq)]
-    /// struct NamedFields {
-    ///     a: u32,
-    ///     b: [u32; 32],
-    /// }
-    ///
-    /// let allocated: NamedFields = allocate_spread_root(&Key::from([0x42; 32]));
-    /// assert_eq!(
-    ///     allocated,
-    ///     NamedFields {
-    ///         a: 0,
-    ///         b: [0; 32],
-    ///     }
-    /// );
-    /// ```
-    enum_spread_allocate_derive
+    [EnumSpreadAllocate] => enum_spread_allocate_derive
 );
