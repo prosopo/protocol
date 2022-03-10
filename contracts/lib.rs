@@ -125,7 +125,7 @@ pub mod prosopo {
     }
 
     /// RandomProvider is selected randomly by the contract for the client side application
-    #[derive(scale::Encode, scale::Decode)]
+    #[derive(PartialEq, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub struct RandomProvider {
         provider: Provider,
@@ -1265,7 +1265,6 @@ pub mod prosopo {
     /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
     /// module and test functions are marked with a `#[test]` attribute.
     /// The below code is technically just normal Rust code.
-    #[cfg(not(feature = "ink-experimental-engine"))]
     #[cfg(test)]
     mod tests {
         /// Imports `ink_lang` so we can use `#[ink::test]`.
@@ -1274,8 +1273,12 @@ pub mod prosopo {
         use ink_env::hash::HashOutput;
         use ink_lang as ink;
 
+        use crate::prosopo::Error::ProviderInactive;
+
         /// Imports all the definitions from the outer scope so we can use them here.
         use super::*;
+
+        type Event = <Prosopo as ::ink_lang::reflect::ContractEventBase>::Type;
 
         /// We test if the default constructor does its job.
         #[ink::test]
@@ -1357,22 +1360,6 @@ pub mod prosopo {
             result.as_mut()[0..copy_len].copy_from_slice(&hash_output[0..copy_len]);
             result
         }
-    }
-
-    #[cfg(feature = "ink-experimental-engine")]
-    #[cfg(test)]
-    mod tests_experimental_engine {
-        use ink_env::hash::Blake2x256;
-        use ink_env::hash::CryptoHash;
-        use ink_env::hash::HashOutput;
-        use ink_lang as ink;
-
-        use crate::prosopo::Error::ProviderInactive;
-
-        use super::*;
-        use ink_env::test::EmittedEvent;
-
-        type Event = <Prosopo as ::ink_lang::reflect::ContractEventBase>::Type;
 
         /// Provider Register Helper
         fn generate_provider_data(id: u8, port: &str, fee: u32) -> (AccountId, Hash, u32) {
@@ -2141,33 +2128,22 @@ pub mod prosopo {
         }
 
         // // Test get random provider
-        // #[ink::test]
-        // fn test_get_random_active_provider() {
-        //     let operator_account = AccountId::from([0x1; 32]);
-        //     let mut contract = Prosopo::default(operator_account);
-        //     let provider_account = AccountId::from([0x2; 32]);
-        //     let service_origin = str_to_hash("https://localhost:2424".to_string());
-        //     let fee: u32 = 0;
-        //     contract.provider_register(service_origin, fee, Payee::Provider, provider_account);
-        //     let fee2: u32 = 100;
-        //     ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
-        //     let balance = 1000;
-        //     ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
-        //     contract.provider_update(service_origin, fee, Payee::Dapp, provider_account);
-        //     let registered_provider_account = contract.providers.get(&provider_account);
-        //     let selected_provider = contract.get_random_active_provider();
-        //     assert!(selected_provider.unwrap() == registered_provider_account.unwrap());
-        // }
-
-        /// Helper function for converting string to Hash
-        fn str_to_hash(str: String) -> Hash {
-            let mut result = Hash::default();
-            let len_result = result.as_ref().len();
-            let mut hash_output = <<Blake2x256 as HashOutput>::Type as Default>::default();
-            <Blake2x256 as CryptoHash>::hash((&str).as_ref(), &mut hash_output);
-            let copy_len = core::cmp::min(hash_output.len(), len_result);
-            result.as_mut()[0..copy_len].copy_from_slice(&hash_output[0..copy_len]);
-            result
+        #[ink::test]
+        fn test_get_random_active_provider() {
+            let operator_account = AccountId::from([0x1; 32]);
+            let mut contract = Prosopo::default(operator_account);
+            let provider_account = AccountId::from([0x2; 32]);
+            let service_origin = str_to_hash("https://localhost:2424".to_string());
+            let fee: u32 = 0;
+            contract.provider_register(service_origin, fee, Payee::Provider, provider_account);
+            let fee2: u32 = 100;
+            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
+            let balance = 1000;
+            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            contract.provider_update(service_origin, fee, Payee::Dapp, provider_account);
+            let registered_provider_account = contract.providers.get(&provider_account);
+            let selected_provider = contract.get_random_active_provider(provider_account);
+            assert!(selected_provider.unwrap().provider == registered_provider_account.unwrap());
         }
     }
 }
