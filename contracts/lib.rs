@@ -198,6 +198,8 @@ pub mod prosopo {
         contract: AccountId,
         // The Provider AccountId that is permitted to approve or disapprove the commitment
         provider: AccountId,
+        // Time of completion
+        completed_at: Timestamp,
     }
 
     /// DApps are distributed apps who want their users to be verified by Providers, either paying
@@ -245,8 +247,15 @@ pub mod prosopo {
         // commented until block timestamp is available in ink unit tests
         // created: Timestamp,
         // updated: Timestamp,
-        //last_correct_captcha: Timestamp,
-        //last_correct_captcha_dapp_id: AccountId,
+        last_correct_captcha: Timestamp,
+        last_correct_captcha_dapp_id: AccountId,
+    }
+
+    #[derive(scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    pub struct LastCorrectCaptcha {
+        pub before_ms: u32,
+        pub dapp_id: AccountId,
     }
 
     // Contract storage
@@ -836,6 +845,7 @@ pub mod prosopo {
                 status: CaptchaStatus::Pending,
                 contract,
                 provider,
+                completed_at: self.env().block_timestamp(),
             };
 
             self.create_new_dapp_user(caller);
@@ -859,8 +869,8 @@ pub mod prosopo {
                 let user = User {
                     correct_captchas: 0,
                     incorrect_captchas: 0,
-                    //last_correct_captcha: (),
-                    //last_correct_captcha_dapp_id: (),
+                    last_correct_captcha: 0,
+                    last_correct_captcha_dapp_id: AccountId::default(),
                 };
                 self.dapp_users.insert(account, &user);
                 self.dapp_user_accounts.push(account);
@@ -897,6 +907,8 @@ pub mod prosopo {
             if commitment_mut.status == CaptchaStatus::Pending {
                 commitment_mut.status = CaptchaStatus::Approved;
                 user.correct_captchas += 1;
+                user.last_correct_captcha = commitment.completed_at;
+                user.last_correct_captcha_dapp_id = commitment.contract;
                 self.captcha_solution_commitments
                     .insert(captcha_solution_commitment_id, &commitment_mut);
                 self.dapp_users.insert(&commitment.account, &user);
@@ -1023,6 +1035,22 @@ pub mod prosopo {
                 user.correct_captchas / (user.correct_captchas + user.incorrect_captchas) * 100
                     >= threshold.into(),
             )
+        }
+
+        #[ink(message)]
+        pub fn dapp_operator_last_correct_captcha(
+            &self,
+            user: AccountId,
+        ) -> Result<LastCorrectCaptcha, Error> {
+            let user = self.get_dapp_user(user)?;
+
+            Ok(LastCorrectCaptcha {
+                before_ms: u32::try_from(
+                    self.env().block_timestamp() - user.last_correct_captcha,
+                )
+                .unwrap(),
+                dapp_id: user.last_correct_captcha_dapp_id,
+            })
         }
 
         // Disputes and governance messages
