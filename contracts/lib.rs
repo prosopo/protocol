@@ -1345,6 +1345,15 @@ pub mod prosopo {
             assert!(contract.operator_accounts.contains(&operator_account));
         }
 
+        /// Assert contract minimum stake default set from constructor.
+        #[ink::test]
+        pub fn test_provider_stake_default() {
+            let operator_account = AccountId::from([0x1; 32]);
+            let contract = Prosopo::default(operator_account, PROVIDER_STAKE_DEFAULT);
+            let provider_stake_default: u128 = contract.get_provider_stake_default();
+            assert!(PROVIDER_STAKE_DEFAULT.eq(&provider_stake_default));
+        }
+
         /// Test provider register
         #[ink::test]
         fn test_provider_register() {
