@@ -52,7 +52,7 @@ cargo install cargo-tarpaulin
 Run with the following command to see code coverage metrics.
 
 ```bash
-cargo +nightly test --no-default-features --features std --verbose -- --nocapture
+cargo +nightly tarpaulin --no-default-features --features std --verbose -- --nocapture
 ```
 
 ## Deploy
