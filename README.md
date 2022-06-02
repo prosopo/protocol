@@ -66,7 +66,7 @@ cargo contract instantiate $WASM --args "$ARGS_OWNER $ARGS_PROVIDER_STAKE_DEFAUL
 Example values for the variables are given below
 
 ```bash
-ENDPOINT=ws://substrate-node
+ENDPOINT=ws://0.0.0.0
 PORT=9944
 SURI=//Alice
 WASM=./target/ink/prosopo.wasm
