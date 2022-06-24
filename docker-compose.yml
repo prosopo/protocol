@@ -25,7 +25,7 @@ services:
       - substrate-node
     #command: "tail -f /dev/null"
   substrate-node:
-    image: prosopo/substrate:v0.14.0
+    image: prosopo/substrate:v1.0.0
     build:
       context: ./docker/
       dockerfile: Substrate.dockerfile
