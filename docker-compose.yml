@@ -24,3 +24,12 @@ services:
     links:
       - substrate-node
     #command: "tail -f /dev/null"
+  substrate-node:
+    image: prosopo/substrate:v0.14.0
+    build:
+      context: ./docker/
+      dockerfile: Substrate.dockerfile
+    ports:
+      - "9615:9615"
+      - "9944:9944"
+      - "9933:9933"
