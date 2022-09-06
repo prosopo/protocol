@@ -60,7 +60,7 @@ cargo +nightly tarpaulin --no-default-features --features std --verbose -- --noc
 The contract can be deployed from the command line using `cargo-contract`:
 
 ```bash
-cargo contract instantiate $WASM --args "$ARGS_OWNER $ARGS_PROVIDER_STAKE_DEFAULT" --constructor $CONSTRUCTOR --suri $SURI --value $ENDOWMENT --url '$ENDPOINT:$PORT'
+cargo contract instantiate $WASM --args "$ARGS_OWNER $ARGS_PROVIDER_STAKE_DEFAULT" --constructor $CONSTRUCTOR --suri $SURI --value $ENDOWMENT --url $ENDPOINT:$PORT
 ```
 
 Example values for the variables are given below
