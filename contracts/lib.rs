@@ -905,15 +905,14 @@ pub mod prosopo {
                 return Err(Error::CaptchaSolutionCommitmentNotPending);
             }
 
+            self.pay_fee(&caller, &commitment.contract)?;
+
             if approve {
                 commitment_mut.status = CaptchaStatus::Approved;
                 user.correct_captchas += 1;
                 user.last_correct_captcha = commitment.completed_at;
                 user.last_correct_captcha_dapp_id = commitment.contract;
-                self.captcha_solution_commitments
-                    .insert(captcha_solution_commitment_id, &commitment_mut);
-                self.dapp_users.insert(&commitment.account, &user);
-                self.pay_fee(&caller, &commitment.contract)?;
+                // get a refund if approved
                 self.refund_transaction_fee(commitment, transaction_fee)?;
                 self.env().emit_event(ProviderApprove {
                     captcha_solution_commitment_id,
@@ -921,14 +920,14 @@ pub mod prosopo {
             } else {
                 commitment_mut.status = CaptchaStatus::Disapproved;
                 user.incorrect_captchas += 1;
-                self.captcha_solution_commitments
-                    .insert(captcha_solution_commitment_id, &commitment_mut);
-                self.dapp_users.insert(&commitment.account, &user);
-                self.pay_fee(&caller, &commitment.contract)?;
                 self.env().emit_event(ProviderDisapprove {
                     captcha_solution_commitment_id,
                 });
             }
+
+            self.captcha_solution_commitments
+            .insert(captcha_solution_commitment_id, &commitment_mut);
+            self.dapp_users.insert(&commitment.account, &user);
 
             Ok(())
 
