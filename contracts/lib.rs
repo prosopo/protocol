@@ -336,6 +336,8 @@ pub mod prosopo {
         NoActiveProviders,
         /// Returned if the dataset ID and dataset ID with solutions are identical
         DatasetIdSolutionsSame,
+        /// Returned if solution commitment has already been processed and is no longer pending
+        CaptchaSolutionCommitmentNotPending,
     }
 
     /// Concatenate two arrays (a and b) into a new array (c)
@@ -900,7 +902,7 @@ pub mod prosopo {
 
             // only make changes if commitment is Pending approval or disapproval
             if commitment_mut.status != CaptchaStatus::Pending {
-                return Err(Error::CommitmentNotPending);
+                return Err(Error::CaptchaSolutionCommitmentNotPending);
             }
 
             if approve {
