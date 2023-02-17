@@ -227,20 +227,14 @@ pub mod prosopo {
         value: Balance,
     }
 
-    // Event emitted when a provider approves a solution
+    // Event emitted when a provider approves or disapproves a solution
     #[ink(event)]
     #[derive(Debug)]
-    pub struct ProviderApprove {
+    pub struct ProviderCommit {
         #[ink(topic)]
         captcha_solution_commitment_id: Hash,
-    }
-
-    // Event emitted when a provider disapproves a solution
-    #[ink(event)]
-    #[derive(Debug)]
-    pub struct ProviderDisapprove {
         #[ink(topic)]
-        captcha_solution_commitment_id: Hash,
+        approve: bool,
     }
 
     // Event emitted when a dapp registers
@@ -914,20 +908,20 @@ pub mod prosopo {
                 user.last_correct_captcha_dapp_id = commitment.contract;
                 // get a refund if approved
                 self.refund_transaction_fee(commitment, transaction_fee)?;
-                self.env().emit_event(ProviderApprove {
-                    captcha_solution_commitment_id,
-                });
+                
             } else {
                 commitment.status = CaptchaStatus::Disapproved;
                 user.incorrect_captchas += 1;
-                self.env().emit_event(ProviderDisapprove {
-                    captcha_solution_commitment_id,
-                });
             }
 
             self.captcha_solution_commitments
             .insert(captcha_solution_commitment_id, &commitment);
             self.dapp_users.insert(&commitment.account, &user);
+
+            self.env().emit_event(ProviderCommit {
+                captcha_solution_commitment_id,
+                approve,
+            });
 
             Ok(())
 
