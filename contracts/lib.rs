@@ -883,9 +883,12 @@ pub mod prosopo {
         ) -> Result<(), Error> {
             let caller = self.env().caller();
             self.validate_provider_active(caller)?;
+
+            let mut commitment = self
+                .captcha_solution_commitments
+                .get(&captcha_solution_commitment_id)?;
+            
             // Guard against incorrect solution id
-            let commitment =
-                self.get_captcha_solution_commitment(captcha_solution_commitment_id)?;
             if commitment.provider != caller {
                 return Err(Error::NotAuthorised);
             }
@@ -894,21 +897,18 @@ pub mod prosopo {
             self.get_dapp_user(commitment.account)?;
 
             // get the mutables
-            let mut commitment_mut = self
-                .captcha_solution_commitments
-                .get(&captcha_solution_commitment_id)
-                .unwrap();
+            
             let mut user = self.dapp_users.get(&commitment.account).unwrap();
 
             // only make changes if commitment is Pending approval or disapproval
-            if commitment_mut.status != CaptchaStatus::Pending {
+            if commitment.status != CaptchaStatus::Pending {
                 return Err(Error::CaptchaSolutionCommitmentNotPending);
             }
 
             self.pay_fee(&caller, &commitment.contract)?;
 
             if approve {
-                commitment_mut.status = CaptchaStatus::Approved;
+                commitment.status = CaptchaStatus::Approved;
                 user.correct_captchas += 1;
                 user.last_correct_captcha = commitment.completed_at;
                 user.last_correct_captcha_dapp_id = commitment.contract;
@@ -918,7 +918,7 @@ pub mod prosopo {
                     captcha_solution_commitment_id,
                 });
             } else {
-                commitment_mut.status = CaptchaStatus::Disapproved;
+                commitment.status = CaptchaStatus::Disapproved;
                 user.incorrect_captchas += 1;
                 self.env().emit_event(ProviderDisapprove {
                     captcha_solution_commitment_id,
@@ -926,7 +926,7 @@ pub mod prosopo {
             }
 
             self.captcha_solution_commitments
-            .insert(captcha_solution_commitment_id, &commitment_mut);
+            .insert(captcha_solution_commitment_id, &commitment);
             self.dapp_users.insert(&commitment.account, &user);
 
             Ok(())
