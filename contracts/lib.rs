@@ -837,9 +837,9 @@ pub mod prosopo {
 
                 // call provider_approve or provider_disapprove depending on whether the status is Approved or Disapproved
                 match status_option.unwrap_or(CaptchaStatus::Pending) {
-                    CaptchaStatus::Approved => self.provider_approve(user_merkle_tree_root, 0)?,
+                    CaptchaStatus::Approved => self.provider_commit(user_merkle_tree_root, 0, true)?,
                     CaptchaStatus::Disapproved => {
-                        self.provider_disapprove(user_merkle_tree_root)?
+                        self.provider_commit(user_merkle_tree_root, 0, false)?
                     }
                     _ => {}
                 }
@@ -886,7 +886,7 @@ pub mod prosopo {
 
             let mut commitment = self
                 .captcha_solution_commitments
-                .get(&captcha_solution_commitment_id)?;
+                .get(&captcha_solution_commitment_id).ok_or(Error::CaptchaSolutionCommitmentDoesNotExist)?;
             
             // Guard against incorrect solution id
             if commitment.provider != caller {
@@ -2009,7 +2009,7 @@ pub mod prosopo {
             // Call from the provider account to mark the solution as approved
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let solution_id = user_root;
-            contract.provider_approve(solution_id, 0);
+            contract.provider_commit(solution_id, 0, true);
             let commitment = contract
                 .captcha_solution_commitments
                 .get(&solution_id)
@@ -2022,7 +2022,7 @@ pub mod prosopo {
 
             // Now make sure that the provider cannot later set the solution to disapproved and make
             // sure that the dapp balance is unchanged
-            contract.provider_disapprove(solution_id);
+            contract.provider_commit(solution_id, 0, false);
             let commitment = contract
                 .captcha_solution_commitments
                 .get(&solution_id)
@@ -2091,7 +2091,7 @@ pub mod prosopo {
             // Call from the provider account to mark the wrong solution as approved
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let solution_id = str_to_hash("id that does not exist".to_string());
-            let result = contract.provider_approve(solution_id, 0);
+            let result = contract.provider_commit(solution_id, 0, true);
             assert_eq!(
                 Error::CaptchaSolutionCommitmentDoesNotExist,
                 result.unwrap_err()
@@ -2151,7 +2151,7 @@ pub mod prosopo {
             // Call from the provider account to mark the solution as disapproved
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let solution_id = user_root;
-            contract.provider_disapprove(solution_id);
+            contract.provider_commit(solution_id, 0, false);
             let commitment = contract
                 .captcha_solution_commitments
                 .get(&solution_id)
@@ -2163,7 +2163,7 @@ pub mod prosopo {
             assert_eq!(balance + Balance::from(fee), new_provider_balance);
 
             // Now make sure that the provider cannot later set the solution to approved
-            contract.provider_approve(solution_id, 0);
+            contract.provider_commit(solution_id, 0, true);
             let commitment = contract
                 .captcha_solution_commitments
                 .get(&solution_id)
@@ -2234,7 +2234,7 @@ pub mod prosopo {
             // Call from the provider account to mark the solution as disapproved
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let solution_id = user_root;
-            contract.provider_disapprove(solution_id);
+            contract.provider_commit(solution_id, 0, false);
             let commitment = contract
                 .captcha_solution_commitments
                 .get(&solution_id)
