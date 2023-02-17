@@ -871,12 +871,13 @@ pub mod prosopo {
             }
         }
 
-        /// Approve a solution commitment, increment correct captchas, and refund the users tx fee
+        /// Approve/disapprove a solution commitment, increment (in)correct captchas, and refund the users tx fee if approved
         #[ink(message)]
-        pub fn provider_approve(
+        pub fn provider_commit(
             &mut self,
             captcha_solution_commitment_id: Hash,
             transaction_fee: Balance,
+            approve: bool,
         ) -> Result<(), Error> {
             let caller = self.env().caller();
             self.validate_provider_active(caller)?;
@@ -898,7 +899,11 @@ pub mod prosopo {
             let mut user = self.dapp_users.get(&commitment.account).unwrap();
 
             // only make changes if commitment is Pending approval or disapproval
-            if commitment_mut.status == CaptchaStatus::Pending {
+            if commitment_mut.status != CaptchaStatus::Pending {
+                return Err(Error::CommitmentNotPending);
+            }
+
+            if approve {
                 commitment_mut.status = CaptchaStatus::Approved;
                 user.correct_captchas += 1;
                 user.last_correct_captcha = commitment.completed_at;
@@ -911,38 +916,7 @@ pub mod prosopo {
                 self.env().emit_event(ProviderApprove {
                     captcha_solution_commitment_id,
                 });
-            }
-
-            Ok(())
-        }
-
-        /// Disapprove a solution commitment and increment incorrect captchas
-        #[ink(message)]
-        pub fn provider_disapprove(
-            &mut self,
-            captcha_solution_commitment_id: Hash,
-        ) -> Result<(), Error> {
-            let caller = self.env().caller();
-            self.validate_provider_active(caller)?;
-            // Guard against incorrect solution id
-            let commitment =
-                self.get_captcha_solution_commitment(captcha_solution_commitment_id)?;
-            if commitment.provider != caller {
-                return Err(Error::NotAuthorised);
-            }
-            self.validate_dapp(commitment.contract)?;
-            // Check the user exists
-            self.get_dapp_user(commitment.account)?;
-
-            // get the mutables
-            let mut commitment_mut = self
-                .captcha_solution_commitments
-                .get(&captcha_solution_commitment_id)
-                .unwrap();
-            let mut user = self.dapp_users.get(&commitment.account).unwrap();
-
-            // only make changes if commitment is Pending approval or disapproval
-            if commitment_mut.status == CaptchaStatus::Pending {
+            } else {
                 commitment_mut.status = CaptchaStatus::Disapproved;
                 user.incorrect_captchas += 1;
                 self.captcha_solution_commitments
@@ -955,6 +929,7 @@ pub mod prosopo {
             }
 
             Ok(())
+
         }
 
         /// Transfer a balance from a provider to a dapp or from a dapp to a provider,
