@@ -791,6 +791,16 @@ pub mod prosopo {
             Ok(())
         }
 
+        /// Update a dapp with new funds
+        #[ink(message)]
+        pub fn dapp_fund(
+            &mut self,
+            contract: AccountId,
+        ) -> Result<(), Error> {
+            let dapp = self.dapps.get(&contract).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
+            self.dapp_update(contract, dapp.payee)
+        }
+
         /// Cancel services as a dapp, returning remaining tokens
         #[ink(message)]
         pub fn dapp_cancel(&mut self, contract: AccountId) -> Result<(), Error> {
