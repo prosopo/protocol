@@ -227,22 +227,22 @@ pub mod prosopo {
     // Contract storage
     #[ink(storage)]
     pub struct Prosopo {
-        providers: Mapping<AccountId, Provider>,
-        provider_accounts: Mapping<(GovernanceStatus, Payee), BTreeSet<AccountId>>,
-        service_origins: Mapping<Hash, ()>,
-        captcha_data: Mapping<Hash, CaptchaData>,
-        captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>,
-        provider_stake_default: u128,
-        dapp_stake_default: u128,
-        dapps: Mapping<AccountId, Dapp>,
-        dapp_accounts: Lazy<Vec<AccountId>>,
-        operators: Mapping<AccountId, Operator>,
-        operator_accounts: Lazy<Vec<AccountId>>,
-        operator_stake_default: u128,
-        operator_fee_currency: Hash,
-        dapp_users: Mapping<AccountId, User>,
-        dapp_user_accounts: Lazy<Vec<AccountId>>,
-        operator_code_hash_votes: Mapping<AccountId, [u8; 32]>,
+        providers: Mapping<AccountId, Provider>, // map provider id to provider info
+        provider_accounts: Mapping<(GovernanceStatus, Payee), BTreeSet<AccountId>>, // map gov status to list of providers
+        service_origins: Mapping<Hash, AccountId>, // map service origin to provider id
+        captcha_data: Mapping<Hash, CaptchaData>, // map captcha id to captcha data
+        captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>, // map captcha solution commitment id to captcha solution commitment
+        provider_stake_default: u128, // the minimum stake required for a provider to be active
+        dapp_stake_default: u128, // the minimum stake required for a dapp to be active
+        dapps: Mapping<AccountId, Dapp>, // map dapp id to dapp struct
+        dapp_accounts: Lazy<Vec<AccountId>>, // list of dapp accounts
+        operators: Mapping<AccountId, Operator>, // map operator id to operator info
+        operator_accounts: Lazy<Vec<AccountId>>, // list of operator accounts
+        operator_stake_default: u128, // the minimum stake required for an operator to be active
+        operator_fee_currency: Hash, // the currency used to pay the operator fee
+        dapp_users: Mapping<AccountId, User>, // map dapp user id to user info
+        dapp_user_accounts: Lazy<Vec<AccountId>>, // list of dapp user accounts
+        operator_code_hash_votes: Mapping<AccountId, [u8; 32]>, // map operator id to voted code hash
     }
 
     // Event emitted when a new provider registers
