@@ -332,9 +332,10 @@ pub mod prosopo {
         #[ink(topic)]
         contract: AccountId,
         owner: AccountId,
-        value: Balance,
+        balance: Balance,
         payee: DappPayee,
         status: GovernanceStatus,
+        new: bool,
     }
 
     // Event emitted when a dapp funds
@@ -352,7 +353,7 @@ pub mod prosopo {
     pub struct DappCancel {
         #[ink(topic)]
         contract: AccountId,
-        value: Balance,
+        balance: Balance,
     }
 
     // Event emitted when a dapp user commits a solution hash
@@ -424,6 +425,8 @@ pub mod prosopo {
         InvalidContract,
         /// Invalid payee. Returned when the payee value does not exist in the enum
         InvalidPayee,
+        /// Returned if the dapp is already deactivated
+        DappAlreadyDeactivated,
     }
 
     impl Prosopo {
@@ -728,118 +731,62 @@ pub mod prosopo {
             Ok(())
         }
 
-        /// Register a dapp
-        #[ink(message)]
-        pub fn dapp_register(
+        /// Update a dapp with new funds, setting status as appropriate
+        pub fn dapp_update(
             &mut self,
             contract: AccountId,
             payee: DappPayee,
         ) -> Result<(), Error> {
+
             if !self.env().is_contract(&contract) {
                 debug!("Contract is not a contract");
                 return err!(Error::InvalidContract);
             }
+
             let caller = self.env().caller();
-            // the caller is made the owner of the contract
-            let owner = caller;
-            let transferred = self.env().transferred_value();
-            // enforces a one to one relation between caller and dapp
-            if self.dapps.get(&contract).is_some() {
-                // dapp exists so update it instead
-                return self.dapp_update(owner, transferred, contract, caller, payee);
-            }
 
-            // mark the account as suspended if it is new and no funds have been transferred
-            let status = if transferred >= self.dapp_stake_default {
-                GovernanceStatus::Active
-            } else {
-                GovernanceStatus::Suspended
-            };
-            let dapp = Dapp {
-                status,
-                balance: transferred,
-                owner,
-                min_difficulty: 1,
-                payee,
-            };
-            // keying on contract allows owners to own many contracts
-            self.dapps.insert(contract, &dapp);
-            let mut dapp_accounts = self.dapp_accounts.get_or_default();
-            dapp_accounts.push(contract);
-            self.dapp_accounts.set(&dapp_accounts);
-            // emit event
-            self.env().emit_event(DappRegister {
-                contract,
-                owner,
-                value: transferred,
-                payee,
-                status,
-            });
-
-            Ok(())
-        }
-
-        /// Update a dapp with new funds, setting status as appropriate
-        fn dapp_update(
-            &mut self,
-            owner: AccountId,
-            transferred: u128,
-            contract: AccountId,
-            caller: AccountId,
-            payee: DappPayee,
-        ) -> Result<(), Error> {
-            let mut dapp = self.dapps.get(&contract).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
-            // only allow the owner to make changes to the dapp (including funding?!)
+            let dapp_lookup = self.dapps.get(&contract);
+            let mut dapp = dapp_lookup.unwrap_or_else(||
+                Dapp {
+                    status: GovernanceStatus::Suspended,
+                    balance: 0,
+                    // the caller is made the owner of the contract
+                    owner: caller,
+                    min_difficulty: 1,
+                    payee: DappPayee::Provider,
+                }
+            );
+            // only allow the owner to make changes to the dapp
             if dapp.owner != caller {
                 return err!(Error::NotAuthorised);
             }
             
-            let total = dapp.balance + transferred;
-            dapp.balance = total;
-            dapp.owner = owner;
+            dapp.balance += self.env().transferred_value();
+            // mark the account as suspended if it is new and no funds have been transferred
             if dapp.balance >= self.dapp_stake_default {
                 dapp.status = GovernanceStatus::Active;
             } else {
                 dapp.status = GovernanceStatus::Suspended;
             }
             dapp.payee = payee;
+            // update dapp in storage
             self.dapps.insert(contract, &dapp);
-            // emit event
+
+            if dapp_lookup.is_none() {
+                // dapp is new so add it to the list of dapps
+                let mut dapp_accounts = self.dapp_accounts.get_or_default();
+                dapp_accounts.push(contract);
+                self.dapp_accounts.set(&dapp_accounts);
+            }
+
             self.env().emit_event(DappUpdate {
                 contract,
-                owner,
-                value: total,
+                owner: dapp.owner,
+                balance: dapp.balance,
                 payee,
                 status: dapp.status,
+                new: dapp_lookup.is_none(), // dapp is new if not found in storage
             });
-
-            Ok(())
-        }
-
-        /// Fund dapp account to pay for services, if the Dapp caller is registered in self.dapps
-        #[ink(message)]
-        #[ink(payable)]
-        pub fn dapp_fund(&mut self, contract: AccountId) -> Result<(), Error> {
-            let caller = self.env().caller();
-            let transferred = self.env().transferred_value();
-            if self.dapps.get(&contract).is_none() {
-                return err!(Error::DappDoesNotExist);
-            }
-
-            let mut dapp = self.dapps.get(&contract).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
-            let total = dapp.balance + transferred;
-            dapp.balance = total;
-            if dapp.balance > 0 {
-                dapp.status = GovernanceStatus::Active;
-                self.env().emit_event(DappFund {
-                    contract,
-                    value: total,
-                });
-            } else {
-                // Suspended as dapp has no funds
-                dapp.status = GovernanceStatus::Suspended;
-            }
-            self.dapps.insert(contract, &dapp);
 
             Ok(())
         }
@@ -858,18 +805,22 @@ pub mod prosopo {
                 return err!(Error::NotAuthorised);
             }
 
+            if dapp.status == GovernanceStatus::Deactivated {
+                return err!(Error::DappAlreadyDeactivated);
+            }
+
             let balance = dapp.balance;
             if dapp.balance > 0 {
                 self.env().transfer(caller, dapp.balance).ok();
+                dapp.balance = 0;
             }
             
             dapp.status = GovernanceStatus::Deactivated;
-            dapp.balance = 0;
             self.dapps.insert(contract, &dapp);
 
             self.env().emit_event(DappCancel {
                 contract,
-                value: balance,
+                balance: balance,
             });
 
             Ok(())
