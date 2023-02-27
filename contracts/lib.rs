@@ -489,52 +489,7 @@ pub mod prosopo {
             self.dapp_stake_default
         }
 
-        /// Register a provider, their service origin and fee
-        #[ink(message)]
-        pub fn provider_register(
-            &mut self,
-            service_origin: Hash,
-            fee: u32,
-            payee: Payee,
-        ) -> Result<(), Error> {
-            let provider_account = self.env().caller();
-            // this function is for registration only
-            if self.providers.get(&provider_account).is_some() {
-                return err!(Error::ProviderExists);
-            }
-            // prevent duplicate service origins
-            if self.service_origins.get(&service_origin).is_some() {
-                return err!(Error::ProviderServiceOriginUsed);
-            }
-            let balance: u128 = 0;
-            // add a new provider
-            let provider = Provider {
-                status: GovernanceStatus::Deactivated,
-                balance,
-                fee,
-                service_origin,
-                dataset_id: Hash::default(),
-                dataset_id_content: Hash::default(),
-                payee,
-            };
-            self.providers.insert(provider_account, &provider);
-            self.service_origins.insert(service_origin, &());
-            let mut provider_accounts_map = self
-                .provider_accounts
-                .get((GovernanceStatus::Deactivated, payee))
-                .unwrap_or_default();
-            provider_accounts_map.insert(provider_account);
-            self.provider_accounts.insert(
-                (GovernanceStatus::Deactivated, payee),
-                &provider_accounts_map,
-            );
-            self.env().emit_event(ProviderRegister {
-                account: provider_account,
-            });
-            Ok(())
-        }
-
-        /// Update an existing provider, their service origin, fee and deposit funds
+        /// Update a provider, their service origin, fee and deposit funds
         #[ink(message)]
         #[ink(payable)]
         pub fn provider_update(
@@ -544,44 +499,46 @@ pub mod prosopo {
             payee: Payee,
         ) -> Result<(), Error> {
             let provider_account = self.env().caller();
-
-            // this function is for updating only, not registering
-            if self.providers.get(&provider_account).is_none() {
-                return err!(Error::ProviderDoesNotExist);
-            }
-
-            let existing = self.get_provider_details(provider_account)?;
+            let provider_lookup = self.providers.get(&provider_account);
+            let provider = provider_lookup.unwrap_or(Provider {
+                status: GovernanceStatus::Deactivated,
+                balance: 0,
+                fee,
+                service_origin: Hash::default(),
+                dataset_id: Hash::default(),
+                dataset_id_content: Hash::default(),
+                payee,
+            });
+            let new = provider_lookup.is_none();
 
             // prevent duplicate service origins
-            if existing.service_origin != service_origin {
-                if self.service_origins.get(service_origin).is_some() {
+            // who owns the service origin?
+            let service_origin_lookup = self.service_origins.get(&service_origin);
+            if service_origin_lookup.is_some() {
+                // someone already owns the service origin (could be this provider)
+                if service_origin_lookup.unwrap() != provider_account {
+                    // someone else (another provider) owns the service origin
                     return err!(Error::ProviderServiceOriginUsed);
-                } else {
-                    self.service_origins.remove(existing.service_origin);
-                    self.service_origins.insert(service_origin, &());
-                }
+                } // else this provider already owns the service origin
+            } else {
+                // no one owns the service origin
+                // so discard old service origin
+                self.service_origins.remove(&provider.service_origin);
+                // and add new service origin
+                self.service_origins.insert(service_origin, &provider_account);
             }
 
-            let old_status = existing.status;
-            let mut new_status = existing.status;
-            let balance = existing.balance + self.env().transferred_value();
+            let old_status = provider.status;
+            let balance = provider.balance + self.env().transferred_value();
 
-            if balance >= self.provider_stake_default && existing.dataset_id != Hash::default() {
-                new_status = GovernanceStatus::Active;
-            }
+            // update the provider struct
+            provider.payee = payee;
+            provider.fee = fee;
+            provider.service_origin = service_origin;
+            provider.dataset_id = provider.dataset_id;
+            provider.dataset_id_content = provider.dataset_id_content;
+            provider.status = self.provider_set_governance_status(provider);
 
-            // update an existing provider
-            let provider = Provider {
-                status: new_status,
-                balance,
-                fee,
-                service_origin,
-                dataset_id: existing.dataset_id,
-                dataset_id_content: existing.dataset_id_content,
-                payee,
-            };
-
-            self.provider_change_status(provider_account, old_status, new_status, payee);
             self.providers.insert(provider_account, &provider);
 
             self.env().emit_event(ProviderUpdate {
@@ -590,16 +547,41 @@ pub mod prosopo {
             Ok(())
         }
 
+        fn provider_fund(&mut self) -> Result<(), Error> {
+            let provider_account = self.env().caller();
+            let provider_lookup = self.providers.get(&provider_account);
+            if provider_lookup.is_none() {
+                return err!(Error::ProviderDoesNotExist);
+            }
+            let mut provider = provider_lookup.unwrap();
+            provider.balance += self.env().transferred_value();
+            provider.status = self.provider_set_governance_status(provider);
+            self.providers.insert(provider_account, &provider);
+            Ok(())
+        }
+
+        /// Set the governance status of a provider based on the provider's balance and dataset_id
+        fn provider_set_governance_status(&mut self, provider: Provider) -> GovernanceStatus {
+            let provider_account = self.env().caller();
+            let mut new_status = GovernanceStatus::Suspended;
+            if provider.balance >= self.provider_stake_default
+                && provider.dataset_id != Hash::default()
+            {
+                new_status = GovernanceStatus::Active;
+            }
+            return self.provider_change_status(provider_account, provider.status, new_status, provider.payee);
+        }
+
         /// Switch the `provider_account` between indexes in `self.provider_accounts`
         fn provider_change_status(
             &mut self,
             provider_account: AccountId,
-            current_provider_status: GovernanceStatus,
+            current_status: GovernanceStatus,
             new_status: GovernanceStatus,
             payee: Payee,
-        ) {
-            if current_provider_status != new_status {
-                let current_key = (&current_provider_status, &payee);
+        ) -> GovernanceStatus {
+            if current_status != new_status {
+                let current_key = (&current_status, &payee);
                 let new_key = (&new_status, &payee);
                 // Retrieve indexes from storage mapping
                 let mut current_status_provider_accounts =
@@ -618,6 +600,7 @@ pub mod prosopo {
                 self.provider_accounts
                     .insert(new_key, &new_status_provider_accounts);
             }
+            return new_status;
         }
 
         /// De-Register a provider by setting their status to Deactivated
