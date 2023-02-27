@@ -762,12 +762,7 @@ pub mod prosopo {
             }
             
             dapp.balance += self.env().transferred_value();
-            // mark the account as suspended if it is new and no funds have been transferred
-            if dapp.balance >= self.dapp_stake_default {
-                dapp.status = GovernanceStatus::Active;
-            } else {
-                dapp.status = GovernanceStatus::Suspended;
-            }
+            dapp.status = self.dapp_set_status(dapp);
             dapp.payee = payee;
             // update dapp in storage
             self.dapps.insert(contract, &dapp);
@@ -797,8 +792,22 @@ pub mod prosopo {
             &mut self,
             contract: AccountId,
         ) -> Result<(), Error> {
-            let dapp = self.dapps.get(&contract).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
-            self.dapp_update(contract, dapp.payee)
+            let mut dapp = self.dapps.get(&contract).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
+
+            dapp.balance += self.env().transferred_value();
+            dapp.status = self.dapp_set_status(dapp);
+
+            self.dapps.insert(contract, &dapp);
+
+            Ok(())
+        }
+
+        fn dapp_set_status(&self, dapp: Dapp) -> GovernanceStatus {
+            let mut status = GovernanceStatus::Suspended;
+            if dapp.balance >= self.dapp_stake_default {
+                status = GovernanceStatus::Active;
+            }
+            status
         }
 
         /// Cancel services as a dapp, returning remaining tokens
