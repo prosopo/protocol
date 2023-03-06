@@ -1141,7 +1141,7 @@ pub mod prosopo {
             }
             self.validate_dapp(commitment.contract)?;
 
-            let user = self.dapp_users.get(&commitment.account).unwrap();
+            let user = self.dapp_users.get(commitment.account).unwrap();
 
             // only make changes if commitment is Pending approval or disapproval
             if commitment.status != CaptchaStatus::Pending {
@@ -1165,7 +1165,7 @@ pub mod prosopo {
 
             self.captcha_solution_commitments
             .insert(captcha_solution_commitment_id, &commitment);
-            self.dapp_users.insert(&commitment.account, &user);
+            self.dapp_users.insert(commitment.account, &user);
 
             self.env().emit_event(ProviderCommit {
                 captcha_solution_commitment_id,
