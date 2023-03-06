@@ -445,6 +445,8 @@ pub mod prosopo {
         InvalidCaptchaStatus,
         /// No correct captchas in history (either history is empty or all captchas are incorrect)
         NoCorrectCaptcha,
+        /// Returned if the captcha solution commitment is not pending
+        CaptchaSolutionCommitmentNotPending,
     }
 
     impl Prosopo {
@@ -1139,13 +1141,7 @@ pub mod prosopo {
             }
             self.validate_dapp(commitment.contract)?;
 
-            // only make changes if commitment is Pending approval or disapproval
-            if commitment.status == CaptchaStatus::Pending {
-                commitment.status = CaptchaStatus::Approved;
-
-            // get the mutables
-            
-            let mut user = self.dapp_users.get(&commitment.account).unwrap();
+            let user = self.dapp_users.get(&commitment.account).unwrap();
 
             // only make changes if commitment is Pending approval or disapproval
             if commitment.status != CaptchaStatus::Pending {
