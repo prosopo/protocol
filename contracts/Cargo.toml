@@ -5,13 +5,21 @@ authors = ["Chris Taylor chris@prosopo.io, George Oastler george@prosopo.io, Vin
 edition = "2021"
 
 [dependencies]
-ink = { git = "https://github.com/paritytech/ink", rev="ad4f5e579e39926704e182736af4fa945982ac2b", default-features = false }
+ink = { git = "https://github.com/prosopo/ink", rev="bec5105fb79926377341179389336fcac620c50d", default-features = false }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
 rand_chacha = { version = "0.3.1", default-features = false }
 
 # custom prosopo storage
 prosopo_storage_derive = { version = "3.3.0", path = "crates/storage/derive", default-features = false }
+
+[dependencies.inject_self_macro]
+version = "0.3.0"
+path = "inject_self_macro"
+
+[dependencies.named_functions_macro]
+version = "0.3.0"
+path = "named_functions_macro"
 
 [lib]
 name = "prosopo"
