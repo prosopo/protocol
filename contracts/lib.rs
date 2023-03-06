@@ -992,7 +992,9 @@ pub mod prosopo {
 
                 // call provider_approve or provider_disapprove depending on whether the status is Approved or Disapproved
                 match status_option.unwrap_or(CaptchaStatus::Pending) {
-                    CaptchaStatus::Approved => self.provider_commit(user_merkle_tree_root, 0, true)?,
+                    CaptchaStatus::Approved => {
+                        self.provider_commit(user_merkle_tree_root, 0, true)?
+                    }
                     CaptchaStatus::Disapproved => {
                         self.provider_commit(user_merkle_tree_root, 0, false)?
                     }
@@ -1164,7 +1166,7 @@ pub mod prosopo {
             }
 
             self.captcha_solution_commitments
-            .insert(captcha_solution_commitment_id, &commitment);
+                .insert(captcha_solution_commitment_id, &commitment);
             self.dapp_users.insert(commitment.account, &user);
 
             self.env().emit_event(ProviderCommit {
@@ -1173,7 +1175,6 @@ pub mod prosopo {
             });
 
             Ok(())
-
         }
 
         /// Transfer a balance from a provider to a dapp or from a dapp to a provider,
