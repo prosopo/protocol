@@ -385,6 +385,15 @@ pub mod prosopo {
             }
         }
 
+        /// Terminate the contract and return the remaining balance to the caller.
+        #[ink(message)]
+        pub fn terminate(&mut self) -> Result<(), Error> {
+            if self.operators.get(self.env().caller()).is_none() {
+                return Err(Error::NotAuthorised);
+            }
+            self.env().terminate_contract(self.env().caller())
+        }
+
         /// Get contract provider minimum stake default.
         #[ink(message)]
         pub fn get_provider_stake_default(&self) -> u128 {
@@ -2471,6 +2480,28 @@ pub mod prosopo {
                 )
                 .err();
             assert_eq!(Error::NotAuthorised, dapp_user_commit_result.unwrap());
+        }
+
+        /// Test operator can terminate contract and receive funds
+        #[ink::test]
+        fn test_operator_can_terminate_contract_and_receive_funds() {
+            let operator_account = AccountId::from([0x1; 32]);
+
+            // initialise the contract
+            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let balance: Balance = 2000000000000;
+            ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>(
+                operator_account,
+                balance,
+            );
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator_account);
+            let terminated = move || contract.terminate().unwrap();
+            ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(
+                terminated,
+                operator_account,
+                balance,
+            );
         }
     }
 }
