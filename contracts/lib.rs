@@ -1727,11 +1727,13 @@ pub mod prosopo {
             // is returned.
             for operator in self.operator_accounts.get().unwrap().iter() {
                 if self.operator_code_hash_votes.get(operator).is_none() {
+                    debug!("Set code hash missing vote from operator: {:?}", operator);
                     return Ok(false);
                 }
 
                 let vote = self.operator_code_hash_votes.get(operator).unwrap();
                 if vote != code_hash {
+                    debug!("Set code hash disagreeing vote from operator: {:?}", operator);
                     return Ok(false);
                 }
             }
@@ -1754,6 +1756,8 @@ pub mod prosopo {
             for operator in self.operator_accounts.get().unwrap().iter() {
                 self.operator_code_hash_votes.remove(operator);
             }
+
+            debug!("Set code hash to: {:?}", code_hash);
 
             Ok(true)
         }
