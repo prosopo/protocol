@@ -1131,7 +1131,7 @@ pub mod prosopo {
             approve: bool,
         ) -> Result<(), Error> {
             let caller = self.env().caller();
-            self.validate_provider_active(caller)?;
+            let provider = self.validate_provider_active(caller)?;
 
             let mut commitment = self
                 .captcha_solution_commitments
@@ -1150,7 +1150,21 @@ pub mod prosopo {
                 return Err(Error::CaptchaSolutionCommitmentNotPending);
             }
 
-            self.pay_fee(&caller, &commitment.contract)?;
+            if provider.payee == Payee::Dapp {
+                // pay for traffic
+                if approve {
+                    // pay fee from provider to dapp for an approved captcha
+                    self.pay_fee(&caller, &commitment.contract)?;
+                } else {
+                    // don't pay fee on a disapproved captcha
+                }
+            } else if provider.payee == Payee::Provider {
+                // pay for captcha service from dapp to provider
+                self.pay_fee(&commitment.contract, &caller)?;
+            } else {
+                return err!(Error::InvalidPayee);
+            }
+
             self.record_commitment(
                 commitment.account,
                 captcha_solution_commitment_id,
@@ -1159,7 +1173,6 @@ pub mod prosopo {
 
             if approve {
                 commitment.status = CaptchaStatus::Approved;
-                // get a refund if approved
                 self.refund_transaction_fee(commitment, transaction_fee)?;
             } else {
                 commitment.status = CaptchaStatus::Disapproved;
