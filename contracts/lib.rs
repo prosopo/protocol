@@ -1733,7 +1733,10 @@ pub mod prosopo {
 
                 let vote = self.operator_code_hash_votes.get(operator).unwrap();
                 if vote != code_hash {
-                    debug!("Set code hash disagreeing vote from operator: {:?}", operator);
+                    debug!(
+                        "Set code hash disagreeing vote from operator: {:?}",
+                        operator
+                    );
                     return Ok(false);
                 }
             }
