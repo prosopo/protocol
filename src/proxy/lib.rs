@@ -217,8 +217,9 @@ pub mod proxy {
             ink::env::test::set_callee::<ink::env::DefaultEnvironment>;
         const set_contract: fn(AccountId) =
             ink::env::test::set_contract::<ink::env::DefaultEnvironment>;
-        const default_accounts: fn() -> ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> =
-            ink::env::test::default_accounts::<ink::env::DefaultEnvironment>;
+        const default_accounts: fn() -> ink::env::test::DefaultAccounts<
+            ink::env::DefaultEnvironment,
+        > = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>;
 
         // unused account is 0x00 - do not use this, it will be the default caller, so could get around caller checks accidentally
         fn get_unused_account() -> AccountId {
