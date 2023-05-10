@@ -7,11 +7,11 @@ macro_rules! err {
     }};
 }
 
-macro_rules! err_fn {
-    ($err:expr) => {
-        || get_self!().print_err($err, function_name!())
-    };
-}
+// macro_rules! err_fn {
+//     ($err:expr) => {
+//         || get_self!().print_err($err, function_name!())
+//     };
+// }
 
 #[allow(unused_macros)]
 #[named_functions_macro::named_functions] // allows the use of the function_name!() macro
