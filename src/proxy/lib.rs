@@ -27,7 +27,7 @@ pub mod proxy {
     pub struct Proxy {
         /// The `AccountId` of a contract where any call that does not match a
         /// selector of this contract is forwarded to.
-        forward_to: AccountId,
+        destination: AccountId,
         admin: AccountId, // the admin account to manage set_code_hash, withdraw, terminate, and set_forward_address
     }
 
@@ -37,7 +37,8 @@ pub mod proxy {
     pub enum Error {
         NotAuthorised,
         TransferFailed,
-        SetCodeHashFailed
+        SetCodeHashFailed,
+        InvalidDestination,
     }
 
     impl Proxy {
@@ -46,9 +47,9 @@ pub mod proxy {
         /// Sets the privileged account to the caller. Only this account may
         /// later changed the `forward_to` address.
         #[ink(constructor)]
-        pub fn new(forward_to: AccountId) -> Self {
+        pub fn new(destination: AccountId) -> Self {
             Self {
-                forward_to,
+                destination,
                 admin: Self::env().caller(), // set the admin to the caller
             }
         }
@@ -63,6 +64,21 @@ pub mod proxy {
                 err
             );
             err
+        }
+
+        /// Set the destination to forward to for this contract
+        #[ink(message)]
+        pub fn set_destination(&mut self, destination: AccountId) -> Result<(), Error> {
+            if self.env().caller() != self.admin {
+                return err!(Error::NotAuthorised);
+            }
+
+            if !self.env().is_contract(&destination) {
+                return err!(Error::InvalidDestination);
+            }
+
+            self.destination = destination;
+            Ok(())
         }
 
         /// Set the admin for this contract
@@ -129,7 +145,7 @@ pub mod proxy {
         #[ink(message, payable, selector = _)]
         pub fn forward(&self) -> u32 {
             ink::env::call::build_call::<ink::env::DefaultEnvironment>()
-                .call(self.forward_to)
+                .call(self.destination)
                 .transferred_value(self.env().transferred_value())
                 .gas_limit(0)
                 .call_flags(
@@ -141,13 +157,13 @@ pub mod proxy {
                 .unwrap_or_else(|env_err| {
                     panic!(
                         "cross-contract call to {:?} failed due to {:?}",
-                        self.forward_to, env_err
+                        self.destination, env_err
                     )
                 })
                 .unwrap_or_else(|lang_err| {
                     panic!(
                         "cross-contract call to {:?} failed due to {:?}",
-                        self.forward_to, lang_err
+                        self.destination, lang_err
                     )
                 });
             unreachable!(
@@ -195,6 +211,8 @@ pub mod proxy {
             ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>;
         const set_callee: fn(AccountId) =
             ink::env::test::set_callee::<ink::env::DefaultEnvironment>;
+            const set_contract: fn(AccountId) =
+                ink::env::test::set_contract::<ink::env::DefaultEnvironment>;
 
         // unused account is 0x00 - do not use this, it will be the default caller, so could get around caller checks accidentally
         fn get_unused_account() -> AccountId {
@@ -239,7 +257,9 @@ pub mod proxy {
 
         /// get the nth contract account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
         fn get_contract_account(index: u128) -> AccountId {
-            get_account(CONTRACT_ACCOUNT_PREFIX, index)
+            let account = get_account(CONTRACT_ACCOUNT_PREFIX, index);
+            set_contract(account); // mark the account as a contract
+            account
         }
 
         /// get the nth admin account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
@@ -431,7 +451,6 @@ pub mod proxy {
             set_caller(get_unused_account());
 
             let mut contract = get_contract(0);
-            println!("contract {:?}", contract.env().account_id());
 
             // give the contract funds
             set_account_balance(contract.env().account_id(), 10000000000);
@@ -478,6 +497,51 @@ pub mod proxy {
             assert_eq!(
                 contract.withdraw(1),
                 Err(Error::NotAuthorised)
+            );
+        }
+
+        #[ink::test]
+        fn test_set_destination() {
+            // always set the caller to the unused account to start, avoid any mistakes with caller checks
+            set_caller(get_unused_account());
+
+            let mut contract = get_contract(0);
+            
+            let old_dest = contract.destination;
+            let new_dest = get_contract_account(1);
+            assert_ne!(old_dest, new_dest);
+            
+            set_caller(get_admin_account(0)); // use the admin acc
+            contract.set_destination(new_dest).unwrap();
+            assert_eq!(contract.destination, new_dest);
+        }
+
+        #[ink::test]
+        fn test_set_destination_unauthorised() {
+            // always set the caller to the unused account to start, avoid any mistakes with caller checks
+            set_caller(get_unused_account());
+
+            let mut contract = get_contract(0);
+
+            set_caller(get_user_account(1)); // use the admin acc
+            assert_eq!(
+                contract.set_destination(get_contract_account(1)),
+                Err(Error::NotAuthorised)
+            );
+        }
+
+        #[ink::test]
+        fn test_set_destination_not_contract() {
+            // always set the caller to the unused account to start, avoid any mistakes with caller checks
+            set_caller(get_unused_account());
+
+            let mut contract = get_contract(0);
+
+            set_caller(get_admin_account(0)); // use the admin acc
+            assert_eq!(
+                // set dest to an account which is not a contract
+                contract.set_destination(get_admin_account(1)),
+                Err(Error::InvalidDestination)
             );
         }
 
