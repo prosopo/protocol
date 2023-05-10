@@ -1567,7 +1567,9 @@ pub mod prosopo {
             ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>;
         const set_callee: fn(AccountId) =
             ink::env::test::set_callee::<ink::env::DefaultEnvironment>;
-        const default_accounts: fn() -> ink::env::test::DefaultAccounts::<ink::env::DefaultEnvironment> = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>;
+        const default_accounts: fn() -> ink::env::test::DefaultAccounts<
+            ink::env::DefaultEnvironment,
+        > = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>;
 
         const ADMIN_ACCOUNT_PREFIX: u8 = 0x01;
         const DAPP_ACCOUNT_PREFIX: u8 = 0x02;
