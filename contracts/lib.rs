@@ -71,9 +71,8 @@ pub mod prosopo {
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum GovernanceStatus {
         Active,    // active and available for use
-        Suspended, // a state that should be used for dapps/providers whose stake drops below the minimum required or who are being investigated as part of a slashing event etc.
         #[default]
-        Deactivated, // temporarily inactive
+        Inactive, // inactive and unavailable for use
     }
 
     /// CaptchaStatus is the status of a CaptchaSolutionCommitment, submitted by a DappUser
@@ -451,8 +450,7 @@ pub mod prosopo {
         pub fn get_statuses(&self) -> Vec<GovernanceStatus> {
             vec![
                 GovernanceStatus::Active,
-                GovernanceStatus::Suspended,
-                GovernanceStatus::Deactivated,
+                GovernanceStatus::Inactive,
             ]
         }
 
@@ -504,7 +502,7 @@ pub mod prosopo {
             let new = lookup.is_err();
             let old_provider = if new {
                 Provider {
-                    status: GovernanceStatus::Deactivated,
+                    status: GovernanceStatus::Inactive,
                     balance: 0,
                     fee: 0,
                     service_origin: Vec::new(),
@@ -566,7 +564,7 @@ pub mod prosopo {
                 GovernanceStatus::Active
             } else {
                 // else set the status to deactivated
-                GovernanceStatus::Deactivated
+                GovernanceStatus::Inactive
             };
 
             let old_service_origin_hash = self.hash_vec_u8(&old_provider.service_origin);
@@ -802,7 +800,7 @@ pub mod prosopo {
             let old_dapp = dapp_lookup.unwrap_or(Dapp {
                 owner: owner.unwrap_or(self.env().caller()),
                 balance: 0,
-                status: GovernanceStatus::Suspended,
+                status: GovernanceStatus::Inactive,
                 payee: payee.unwrap_or(DappPayee::Provider),
                 min_difficulty: 1,
             });
@@ -827,7 +825,7 @@ pub mod prosopo {
             new_dapp.status = if new_dapp.balance >= self.dapp_stake_default && !deactivate {
                 GovernanceStatus::Active
             } else {
-                GovernanceStatus::Deactivated
+                GovernanceStatus::Inactive
             };
 
             if old_dapp == new_dapp {
@@ -1415,8 +1413,7 @@ pub mod prosopo {
             let mut provider_ids = Vec::<AccountId>::new();
             for status in [
                 GovernanceStatus::Active,
-                GovernanceStatus::Suspended,
-                GovernanceStatus::Deactivated,
+                GovernanceStatus::Inactive,
             ] {
                 for payee in [Payee::Provider, Payee::Dapp] {
                     let providers_set = self.provider_accounts.get(ProviderState { status, payee });
@@ -2049,7 +2046,7 @@ pub mod prosopo {
                     contract
                         .provider_accounts
                         .get(ProviderState {
-                            status: GovernanceStatus::Deactivated,
+                            status: GovernanceStatus::Inactive,
                             payee: Payee::Provider
                         })
                         .unwrap_or_default()
@@ -2059,7 +2056,7 @@ pub mod prosopo {
                 assert!(contract
                     .provider_accounts
                     .get(ProviderState {
-                        status: GovernanceStatus::Deactivated,
+                        status: GovernanceStatus::Inactive,
                         payee: Payee::Dapp
                     })
                     .unwrap_or_default()
@@ -2081,7 +2078,7 @@ pub mod prosopo {
                 assert!(contract.providers.get(provider_account).is_some());
                 contract.provider_deactivate();
                 let provider_record = contract.providers.get(provider_account).unwrap();
-                assert!(provider_record.status == GovernanceStatus::Deactivated);
+                assert!(provider_record.status == GovernanceStatus::Inactive);
             }
 
             /// Test list providers
@@ -2178,7 +2175,7 @@ pub mod prosopo {
                 assert!(contract
                     .provider_accounts
                     .get(ProviderState {
-                        status: GovernanceStatus::Deactivated,
+                        status: GovernanceStatus::Inactive,
                         payee: Payee::Dapp
                     })
                     .unwrap()
@@ -2193,7 +2190,7 @@ pub mod prosopo {
                 assert!(contract
                     .provider_accounts
                     .get(ProviderState {
-                        status: GovernanceStatus::Deactivated,
+                        status: GovernanceStatus::Inactive,
                         payee: Payee::Dapp
                     })
                     .unwrap()
@@ -2203,7 +2200,7 @@ pub mod prosopo {
                 assert_eq!(provider.fee, fee);
                 assert_eq!(provider.payee, Payee::Dapp);
                 assert_eq!(provider.balance, balance);
-                assert_eq!(provider.status, GovernanceStatus::Deactivated);
+                assert_eq!(provider.status, GovernanceStatus::Inactive);
             }
 
             /// Test provider register with service_origin error
@@ -2236,7 +2233,7 @@ pub mod prosopo {
                 assert!(!contract
                     .provider_accounts
                     .get(ProviderState {
-                        status: GovernanceStatus::Deactivated,
+                        status: GovernanceStatus::Inactive,
                         payee: Payee::Dapp
                     })
                     .unwrap()
@@ -2362,7 +2359,7 @@ pub mod prosopo {
                 assert_eq!(dapp.owner, caller);
 
                 // account is marked as suspended as zero tokens have been paid
-                assert_eq!(dapp.status, GovernanceStatus::Deactivated);
+                assert_eq!(dapp.status, GovernanceStatus::Inactive);
                 assert_eq!(dapp.balance, balance);
                 assert!(contract
                     .dapp_accounts
