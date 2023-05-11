@@ -70,7 +70,7 @@ pub mod prosopo {
     #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum GovernanceStatus {
-        Active,    // active and available for use
+        Active, // active and available for use
         #[default]
         Inactive, // inactive and unavailable for use
     }
@@ -448,10 +448,7 @@ pub mod prosopo {
 
         #[ink(message)]
         pub fn get_statuses(&self) -> Vec<GovernanceStatus> {
-            vec![
-                GovernanceStatus::Active,
-                GovernanceStatus::Inactive,
-            ]
+            vec![GovernanceStatus::Active, GovernanceStatus::Inactive]
         }
 
         /// Get contract provider minimum stake default.
@@ -1411,10 +1408,7 @@ pub mod prosopo {
         #[ink(message)]
         pub fn get_all_provider_ids(&self) -> Result<Vec<AccountId>, Error> {
             let mut provider_ids = Vec::<AccountId>::new();
-            for status in [
-                GovernanceStatus::Active,
-                GovernanceStatus::Inactive,
-            ] {
+            for status in [GovernanceStatus::Active, GovernanceStatus::Inactive] {
                 for payee in [Payee::Provider, Payee::Dapp] {
                     let providers_set = self.provider_accounts.get(ProviderState { status, payee });
                     if providers_set.is_none() {
