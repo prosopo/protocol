@@ -828,7 +828,7 @@ pub mod prosopo {
                 GovernanceStatus::Inactive
             };
 
-            if old_dapp == new_dapp {
+            if !new && old_dapp == new_dapp {
                 // nothing to do as no change
                 return Ok(());
             }
