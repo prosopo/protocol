@@ -1503,7 +1503,7 @@ pub mod prosopo {
         }
 
         fn check_not_admin(&self, acc: AccountId) -> Result<(), Error> {
-            if self.check_admin(acc).is_ok() {
+            if self.admin == acc {
                 err!(Error::NotAuthorised)
             } else {
                 Ok(())
