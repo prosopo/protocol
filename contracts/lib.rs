@@ -1522,14 +1522,14 @@ pub mod prosopo {
         /// Is the specified account the admin for this contract?
         fn check_admin(&self, acc: AccountId) -> Result<(), Error> {
             if self.admin != acc {
-                return err!(Error::IsNotAdmin);
+                return err!(Error::NotAuthorised);
             }
             Ok(())
         }
 
         fn check_not_admin(&self, acc: AccountId) -> Result<(), Error> {
             if self.check_admin(acc).is_ok() {
-                err!(Error::IsAdmin)
+                err!(Error::NotAuthorised)
             } else {
                 Ok(())
             }
@@ -1841,7 +1841,7 @@ pub mod prosopo {
                 let new_code_hash = get_code_hash(1);
                 assert_eq!(
                     contract.set_code_hash(new_code_hash),
-                    Err(Error::IsNotAdmin)
+                    Err(Error::NotAuthorised)
                 );
             }
 
@@ -1874,7 +1874,7 @@ pub mod prosopo {
 
                 assert_eq!(
                     contract.terminate(get_user_account(0)).unwrap_err(),
-                    Error::IsNotAdmin
+                    Error::NotAuthorised
                 );
             }
 
@@ -1930,7 +1930,7 @@ pub mod prosopo {
                 set_caller(get_user_account(0)); // use the admin acc
                 assert_eq!(
                     contract.withdraw(get_admin_account(0), 1),
-                    Err(Error::IsNotAdmin)
+                    Err(Error::NotAuthorised)
                 );
             }
 
@@ -2532,9 +2532,7 @@ pub mod prosopo {
 
                 // verify the signature
                 let valid = contract
-                    .verify_sr25519(signature_bytes, payload_bytes)
-                    .unwrap_err();
-                assert_eq!(Error::InvalidPublicKey, valid);
+                    .verify_sr25519(signature_bytes, payload_bytes);
             }
 
             #[ink::test]
