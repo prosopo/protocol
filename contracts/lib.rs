@@ -255,8 +255,6 @@ pub mod prosopo {
     pub enum Error {
         /// Returned if calling account is not authorised to perform action
         NotAuthorised,
-        /// Returned if not enough contract balance to fulfill a request is available.
-        ContractInsufficientFunds,
         /// Returned when the contract to address transfer fails
         ContractTransferFailed,
         /// Returned if provider exists when it shouldn't
@@ -269,8 +267,6 @@ pub mod prosopo {
         ProviderInactive,
         /// Returned if service_origin is already used by another provider
         ProviderServiceOriginUsed,
-        /// Returned if requested captcha data id is unavailable
-        DuplicateCaptchaDataId,
         /// Returned if dapp exists when it shouldn't
         DappExists,
         /// Returned if dapp does not exist when it should
@@ -283,20 +279,12 @@ pub mod prosopo {
         CaptchaDataDoesNotExist,
         /// Returned if solution commitment does not exist when it should
         CaptchaSolutionCommitmentDoesNotExist,
-        /// Returned if solution commitment already exists when it should not
-        CaptchaSolutionCommitmentExists,
         /// Returned if dapp user does not exist when it should
         DappUserDoesNotExist,
         /// Returned if there are no active providers
         NoActiveProviders,
         /// Returned if the dataset ID and dataset ID with solutions are identical
         DatasetIdSolutionsSame,
-        /// Returned if the captcha solution commitment has already been approved
-        CaptchaSolutionCommitmentAlreadyApproved,
-        /// Returned if the captcha solution commitment has already been approved
-        CaptchaSolutionCommitmentAlreadyDisapproved,
-        /// Returned if the caller has set their own AccountId as the code hash
-        InvalidCodeHash,
         /// CodeNotFound ink env error
         CodeNotFound,
         /// An unknown ink env error has occurred
@@ -310,23 +298,10 @@ pub mod prosopo {
         InvalidCaptchaStatus,
         /// No correct captchas in history (either history is empty or all captchas are incorrect)
         NoCorrectCaptcha,
-        /// Returned if the function has been disabled in the contract
-        FunctionDisabled,
         /// Returned if not enough providers are active
         NotEnoughActiveProviders,
         /// Returned if provider fee is too high
         ProviderFeeTooHigh,
-        /// Returned if the account is an admin, hence the operation is not allowed due to conflict of interest
-        AccountIsAdmin,
-        /// Returned if the signature is invalid during signing
-        InvalidSignature,
-        /// Returned if the public key is invalid during signing
-        InvalidPublicKey,
-        /// Returned if the account is not an admin
-        IsNotAdmin,
-        IsAdmin,
-        /// Returned if the captcha solution commitment is not pending, i.e. has already been dealt with
-        CaptchaSolutionCommitmentNotPending,
         /// Returned if the commitment already exists
         CaptchaSolutionCommitmentAlreadyExists,
     }
