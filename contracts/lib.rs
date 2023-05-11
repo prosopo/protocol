@@ -824,7 +824,7 @@ pub mod prosopo {
             new_dapp.balance += self.env().transferred_value();
 
             // update the dapp status
-            new_dapp.status = if new_dapp.balance >= self.dapp_stake_default && !deactivate {
+            new_dapp.status = if new_dapp.balance >= self.dapp_stake_threshold && !deactivate {
                 GovernanceStatus::Active
             } else {
                 GovernanceStatus::Deactivated
