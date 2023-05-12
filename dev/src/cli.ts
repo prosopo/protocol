@@ -163,7 +163,14 @@ export async function processArgs(args: string[]) {
             }
         }
 
-        await exec(script)
+        let error = false;
+        try {
+            await exec(script)
+        } catch(e: any) {
+            // error should be printed to console in the exec function
+            // error out after cleanup
+            error = true;
+        }
         
         if(argv.docker) {
             // if running under docker, cache the docker rustup and cargo files
@@ -172,10 +179,18 @@ export async function processArgs(args: string[]) {
             await exec(`docker run --rm -v ${repoDir}/docker-cache:/docker-cache paritytech/contracts-ci-linux:${contractsCiVersion} cp -ur ${cargoDir} /${relDirDockerCache}/`)
             await exec(`docker run --rm -v ${repoDir}/docker-cache:/docker-cache paritytech/contracts-ci-linux:${contractsCiVersion} cp -ur ${rustupDir} /${relDirDockerCache}/`)
         }
+
+        await new Promise((resolve, reject) => {
+            if(error) {
+                reject()
+            } else {
+                resolve({})
+            }
+        })
     }
 
     await yargs
-        // .usage('Usage: $0 [global options] <command> [options]')
+        .usage('Usage: $0 [global options] <command> [options]')
         .command(
             'build',
             'Build the contracts',
