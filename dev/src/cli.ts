@@ -110,16 +110,43 @@ export async function processArgs(args: string[]) {
     }
 
     const execCargo = async (argv: yargs.Arguments<{}>, dir: string, cmd: string, cmdArgs: string) => {
+        const cargoDir = `/usr/local/cargo`
+        const rustupDir = `/usr/local/rustup`
+        const dockerCacheDir = `${repoDir}/docker-cache`
+        const rustupCacheDir = `${dockerCacheDir}/rustup`
+        const cargoCacheDir = `${dockerCacheDir}/cargo`
+        const relDirDockerCache = path.relative(repoDir, dockerCacheDir)
+
+        // if running under docker, cache the docker rustup and cargo files
+        if(argv.docker) {
+            // update any files which aren't already in the cache
+            await exec(`docker run --rm -v ${repoDir}/docker-cache:/docker-cache paritytech/contracts-ci-linux:latest cp -ur ${cargoDir} /${relDirDockerCache}/`)
+            await exec(`docker run --rm -v ${repoDir}/docker-cache:/docker-cache paritytech/contracts-ci-linux:latest cp -ur ${rustupDir} /${relDirDockerCache}/`)
+        }
+
         const relDir = path.relative(repoDir, dir)
+        const relDirContracts = path.relative(repoDir, contractsDir)
+        const relDirCrates = path.relative(repoDir, cratesDir)
         const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
+
         const script = argv.docker ? 
-            `docker run --rm -v ${repoDir}:/repo paritytech/contracts-ci-linux:41abf440-20230503 cargo ${toolchain} ${cmd} --manifest-path=/repo/${relDir}/Cargo.toml ${cmdArgs}`
+            `docker run --rm -v ${contractsDir}:/repo/${relDirContracts} -v ${cratesDir}:/repo/${relDirCrates} -v ${rustupCacheDir}:${rustupDir} -v ${cargoCacheDir}:${cargoDir} paritytech/contracts-ci-linux:41abf440-20230503 cargo ${toolchain} ${cmd} --manifest-path=/repo/${relDir}/Cargo.toml ${cmdArgs}`
             : 
             `cd ${dir} && cargo ${toolchain} ${cmd} ${cmdArgs}`;
+
         // console.log(script)
+        
         await exec(script)
+        
         if(argv.docker) {
-            await exec(`sudo chown -R $(whoami):$(whoami) ${dir}/target || true`)
+            // if running under docker, cache the docker rustup and cargo files
+            // update any files which aren't already in the cache
+            // this is done after the build, as the build will have updated the files / added dependencies to the cargo cache, etc
+            await exec(`docker run --rm -v ${repoDir}/docker-cache:/docker-cache paritytech/contracts-ci-linux:latest cp -ur ${cargoDir} /${relDirDockerCache}/`)
+            await exec(`docker run --rm -v ${repoDir}/docker-cache:/docker-cache paritytech/contracts-ci-linux:latest cp -ur ${rustupDir} /${relDirDockerCache}/`)
+
+            // take ownership of any files which were created by docker, as docker runs as root, not the local user
+            await exec(`sudo chown -R $(whoami):$(whoami) ${cratesDir} ${contractsDir} ${dockerCacheDir} || true`)
         }
     }
 
