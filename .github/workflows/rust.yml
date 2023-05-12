@@ -27,6 +27,8 @@ jobs:
         run: |
           cd dev
           npm run fmt -- --check --toolchain nightly --docker
+          # take ownership of the build files so they can be cached
+          sudo chown -R $(whoami):$(whoami) target || true
 
       # Restore the cargo build from cache, if available
       - name: Restore cached cargo build
@@ -52,6 +54,8 @@ jobs:
         run: |
           cd dev
           npm run clippy -- --toolchain nightly --docker
+          # take ownership of the build files so they can be cached
+          sudo chown -R $(whoami):$(whoami) target || true
 
       # Do the build
       - name: Build contract
@@ -59,6 +63,8 @@ jobs:
         run: | 
           cd dev
           npm run build -- --release --toolchain nightly --docker
+          # take ownership of the build files so they can be cached
+          sudo chown -R $(whoami):$(whoami) target || true
           
       # Do unit testing
       - name: Test contract
@@ -66,6 +72,8 @@ jobs:
           cd dev
           RUST_BACKTRACE=1 npm run test -- --toolchain nightly --docker
           result=$?
+          # take ownership of the build files so they can be cached
+          sudo chown -R $(whoami):$(whoami) target || true
           exit $result
 
       - name: Cleanup cargo build caches
