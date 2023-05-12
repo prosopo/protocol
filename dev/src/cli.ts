@@ -148,21 +148,21 @@ export async function processArgs(args: string[]) {
         }
     }
 
-    const execCargo = async (argv: yargs.Arguments<{}>, dir: string, cmd: string, cmdArgs: string) => {
-        if(argv.docker) {
-            initDocker();
-        }
-
+    const execCargo = async (argv: yargs.Arguments<{}>, cmd: string, cmdArgs: string, dir?: string) => {
         const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
         const relDir = path.relative(repoDir, dir)
 
-        const script = argv.docker ? 
-            `docker run --rm -v ${contractsDir}:/repo/${relDirContracts} -v ${cratesDir}:/repo/${relDirCrates} -v ${rustupCacheDir}:${rustupDir} -v ${cargoCacheDir}:${cargoDir} paritytech/contracts-ci-linux:${contractsCiVersion} cargo ${toolchain} ${cmd} --manifest-path=/repo/${relDir}/Cargo.toml ${cmdArgs}`
-            : 
-            `cd ${dir} && cargo ${toolchain} ${cmd} ${cmdArgs}`;
+        let script: string = "";
+        if(argv.docker) {
+            initDocker();
+            script = `docker run --rm -v ${contractsDir}:/repo/${relDirContracts} -v ${cratesDir}:/repo/${relDirCrates} -v ${rustupCacheDir}:${rustupDir} -v ${cargoCacheDir}:${cargoDir} paritytech/contracts-ci-linux:${contractsCiVersion} cargo ${toolchain} ${cmd} --manifest-path=/repo/${relDir}/Cargo.toml ${cmdArgs}`
+        } else {
+            script = `cargo ${toolchain} ${cmd} ${cmdArgs}`
+            if (dir) {
+                script = `cd ${dir} && ${script}`
+            }
+        }
 
-        // console.log(script)
-        
         await exec(script)
         
         if(argv.docker) {
@@ -190,11 +190,11 @@ export async function processArgs(args: string[]) {
             async (argv) => {
                 const mode = argv.release ? '--release' : ''
 
-                const cmd = 'test'
+                const cmd = 'contract build'
                 const cmdArgs = `${mode}`
 
                 for(const contract of argv.contract as string[]) {
-                    await execCargo(argv, `${contractsDir}/${contract}`, 'contract build', mode)
+                    await execCargo(argv, cmd, cmdArgs, `${contractsDir}/${contract}`)
                 }
             },
             []
@@ -209,18 +209,10 @@ export async function processArgs(args: string[]) {
                 return yargs
             },
             async (argv) => {
-
                 const cmd = 'test'
                 const cmdArgs = ''
 
-                for(const contract of argv.contract as string[]) {
-                    await execCargo(argv, `${contractsDir}/${contract}`, cmd, cmdArgs)
-                }
-
-                for(const crate of argv.crate as string[]) {
-                    await execCargo(argv, `${cratesDir}/${crate}`, cmd, cmdArgs)
-                }
-
+                await execCargo(argv, cmd, cmdArgs)
             },
             []
         ).command(
@@ -242,14 +234,8 @@ export async function processArgs(args: string[]) {
             async (argv) => {
                 const cmd = 'fmt'
                 const cmdArgs = '--all --verbose ${check}'
-
-                for(const contract of argv.contract as string[]) {
-                    await execCargo(argv, `${contractsDir}/${contract}`, cmd, cmdArgs)
-                }
-
-                for(const crate of argv.crate as string[]) {
-                    await execCargo(argv, `${cratesDir}/${crate}`, cmd, cmdArgs)
-                }
+                
+                await execCargo(argv, cmd, cmdArgs)
             },
             []
         ).command(
@@ -269,13 +255,7 @@ export async function processArgs(args: string[]) {
                 const cmd = 'clippy'
                 const cmdArgs = `${fix} -- -D warnings `
 
-                for(const contract of argv.contract as string[]) {
-                    await execCargo(argv, `${contractsDir}/${contract}`, cmd, cmdArgs)
-                }
-
-                for(const crate of argv.crate as string[]) {
-                    await execCargo(argv, `${cratesDir}/${crate}`, cmd, cmdArgs)
-                }
+                await execCargo(argv, cmd, cmdArgs)
             },
             []
         )
