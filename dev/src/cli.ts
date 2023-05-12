@@ -65,26 +65,16 @@ export async function processArgs(args: string[]) {
     const contracts = readdirSync(contractsDir, { withFileTypes: true })
         .filter(dirent => dirent.isDirectory())
         .map(dirent => dirent.name);
+    const packages = [...crates, ...contracts]
 
-    const addContractOption = (yargs: yargs.Argv) => {
+    const addPackageOption = (yargs: yargs.Argv, customPackages?: string[]) => {
         return yargs
-        .option('contract', {
+        .option('package', {
             type: 'array',
             demand: false,
-            desc: 'Build a specific contract',
-            default: contracts,
-            choices: contracts,
-        })
-    }
-
-    const addCrateOption = (yargs: yargs.Argv) => {
-        return yargs
-        .option('crate', {
-            type: 'array',
-            demand: false,
-            desc: 'Build a specific crate',
-            default: crates,
-            choices: crates,
+            desc: 'Target a specific crate/contract',
+            default: customPackages || [],
+            choices: customPackages || [],
         })
     }
 
@@ -142,6 +132,15 @@ export async function processArgs(args: string[]) {
         const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
         const relDir = path.relative(repoDir, dir || "..")
 
+        if(cmd.startsWith("contract") && argv.package) {
+            throw new Error("Cannot run contract commands on specific packages")
+        } else {
+            for(const pkg of argv.package as string[] || []) {
+                // add the package to the end of the cmd
+                cmd = `${cmd} --package ${pkg}`
+            }
+        }
+
         let script: string = "";
         if(argv.docker) {
             pullDockerImage();
@@ -178,7 +177,7 @@ export async function processArgs(args: string[]) {
             'Build the contracts',
             (yargs) => {
                 // cannot build crates
-                yargs = addContractOption(yargs)
+                yargs = addPackageOption(yargs, contracts)
                 yargs = addToolchainOption(yargs)
                 yargs = addReleaseOption(yargs)
                 yargs = addDockerOption(yargs)
@@ -199,8 +198,7 @@ export async function processArgs(args: string[]) {
             'test',
             'Test the crates and contracts',
             (yargs) => {
-                yargs = addCrateOption(yargs)
-                yargs = addContractOption(yargs)
+                yargs = addPackageOption(yargs)
                 yargs = addToolchainOption(yargs)
                 yargs = addDockerOption(yargs)
                 return yargs
@@ -216,9 +214,8 @@ export async function processArgs(args: string[]) {
             'fmt',
             'Format the crates and contracts',
             (yargs) => {
-                yargs = addCrateOption(yargs)
+                yargs = addPackageOption(yargs)
                 yargs = addToolchainOption(yargs)
-                yargs = addContractOption(yargs)
                 yargs = addDockerOption(yargs)
                 yargs = yargs.option('check', {
                     type: 'boolean',
@@ -240,9 +237,8 @@ export async function processArgs(args: string[]) {
             'clippy',
             'Clippy the crates and contracts',
             (yargs) => {
-                yargs = addCrateOption(yargs)
+                yargs = addPackageOption(yargs)
                 yargs = addToolchainOption(yargs)
-                yargs = addContractOption(yargs)
                 yargs = addFixOption(yargs)
                 yargs = addDockerOption(yargs)
                 return yargs
