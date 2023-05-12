@@ -22,18 +22,6 @@ jobs:
           cd dev
           npm install
 
-      - name: Get docker image for contracts-ci
-        id: docker_pull
-        run: |
-          before=$(docker image list -q)
-          docker pull paritytech/contracts-ci-linux:41abf440-20230503
-          after=$(docker image list -q)
-          if [[ "$before" == "$after" ]]; then
-            echo "change=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "change=true" >> "$GITHUB_OUTPUT"
-          fi
-
       # Check if rust is formatted correctly
       - name: Rust formatting check
         run: |
