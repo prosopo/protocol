@@ -14,13 +14,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-
-      - run: ls -la /home/runner/.local/bin
-
       # Checkout the repo
       - uses: actions/checkout@v3
-
-      - run: ls -la
 
       - name: Npm install
         run: |
@@ -39,28 +34,11 @@ jobs:
             echo "change=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Unpack contracts-ci
-        run: |
-          # clear default cargo and rustup on github actions runner
-          rm -rf ~/.cargo
-          rm -rf ~/.rustup
-          mkdir -p ~/.cargo
-          mkdir -p ~/.rustup
-          # pull out the rustup and cargo dirs from the docker image
-          docker run --rm -v ~/.cargo:/target paritytech/contracts-ci-linux:41abf440-20230503 cp -ur /usr/local/cargo/. /target
-          docker run --rm -v ~/.rustup:/target paritytech/contracts-ci-linux:41abf440-20230503 cp -ur /usr/local/rustup/. /target
-          sudo chown -R $(whoami):$(whoami) ~/.cargo
-          sudo chown -R $(whoami):$(whoami) ~/.rustup
-          ls -la ~/.cargo
-          ls -la ~/.rustup
-          rustup show
-          echo path: $PATH
-
       # Check if rust is formatted correctly
       - name: Rust formatting check
         run: |
           cd dev
-          npm run fmt -- --check --toolchain nightly
+          npm run fmt -- --check --toolchain nightly --docker
 
       # Restore the cargo build from cache, if available
       - name: Restore cached cargo build
@@ -77,30 +55,25 @@ jobs:
           key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
           restore-keys: |
             key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-
-      
-      - run: ls -la
-      - run: ls -la contracts || true
-      - run: ls -la contracts/target || true
-      - run: ls -la contracts/target/ink || true
 
       # Check for clippy advice
       - name: Clippy
         run: |
           cd dev
-          npm run clippy -- --toolchain nightly
+          npm run clippy -- --toolchain nightly --docker
 
       # Do the build
       - name: Build contract
         id: build
         run: | 
           cd dev
-          npm run build -- --release --toolchain nightly
+          npm run build -- --release --toolchain nightly --docker
           
       # Do unit testing
       - name: Test contract
         run: |
           cd dev
-          RUST_BACKTRACE=1 npm run test -- --toolchain nightly
+          RUST_BACKTRACE=1 npm run test -- --toolchain nightly --docker
           result=$?
           exit $result
 
