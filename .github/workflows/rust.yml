@@ -70,7 +70,7 @@ jobs:
       - name: Test contract
         run: |
           cd dev
-          RUST_BACKTRACE=1 npm run test -- --package proxy --toolchain nightly --docker
+          RUST_BACKTRACE=1 npm run test -- --toolchain nightly --docker
           result=$?
           # take ownership of the build files so they can be cached
           npm run chown
