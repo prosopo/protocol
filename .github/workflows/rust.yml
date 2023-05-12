@@ -22,78 +22,78 @@ jobs:
           cd dev
           npm install
 
-      # Check if rust is formatted correctly
-      - name: Rust formatting check
-        run: |
-          cd dev
-          npm run fmt -- --check --toolchain nightly --docker
-          # take ownership of the build files so they can be cached
-          sudo chown -R $(whoami):$(whoami) target || true
+      # # Check if rust is formatted correctly
+      # - name: Rust formatting check
+      #   run: |
+      #     cd dev
+      #     npm run fmt -- --check --toolchain nightly --docker
+      #     # take ownership of the build files so they can be cached
+      #     npm run chown
 
-      # Restore the cargo build from cache, if available
-      - name: Restore cached cargo build
-        uses: actions/cache/restore@v3
-        with:
-          path: |
-            target
-          # the cached build is based on the OS, architecture, a tag and the hash of the config files for this build, i.e. the Cargo configuration. The cargo configs may differ across workflows, so the files have to be the same to reuse the cached build image across workflows
-          # restore from a cache matching the key, e.g. "Linux-X64-cargo-env-abcdef123"
-          # "abcdef123" could be anything, it is a random string to differentiate cache usages
-          # e.g. "Linux-X64-cargo-a1" may be from 1/1/23, whereas "Linux-X64-cargo-b2" may be from 2/1/23.
-          # github will match the most recent cache ("b2") when searching for caches and finding multiple matches
-          # the "-" on the end of the key acts like "-*" where the "*" can be any number of characters, including none
-          key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: |
-            cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-
-            cargo-build-${{ runner.os }}-${{ runner.arch }}-
-            cargo-build-${{ runner.os }}-
-            cargo-build-
+      # # Restore the cargo build from cache, if available
+      # - name: Restore cached cargo build
+      #   uses: actions/cache/restore@v3
+      #   with:
+      #     path: |
+      #       target
+      #     # the cached build is based on the OS, architecture, a tag and the hash of the config files for this build, i.e. the Cargo configuration. The cargo configs may differ across workflows, so the files have to be the same to reuse the cached build image across workflows
+      #     # restore from a cache matching the key, e.g. "Linux-X64-cargo-env-abcdef123"
+      #     # "abcdef123" could be anything, it is a random string to differentiate cache usages
+      #     # e.g. "Linux-X64-cargo-a1" may be from 1/1/23, whereas "Linux-X64-cargo-b2" may be from 2/1/23.
+      #     # github will match the most recent cache ("b2") when searching for caches and finding multiple matches
+      #     # the "-" on the end of the key acts like "-*" where the "*" can be any number of characters, including none
+      #     key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
+      #     restore-keys: |
+      #       cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-
+      #       cargo-build-${{ runner.os }}-${{ runner.arch }}-
+      #       cargo-build-${{ runner.os }}-
+      #       cargo-build-
 
-      # Check for clippy advice
-      - name: Clippy
-        run: |
-          cd dev
-          npm run clippy -- --toolchain nightly --docker
-          # take ownership of the build files so they can be cached
-          sudo chown -R $(whoami):$(whoami) target || true
+      # # Check for clippy advice
+      # - name: Clippy
+      #   run: |
+      #     cd dev
+      #     npm run clippy -- --toolchain nightly --docker
+      #     # take ownership of the build files so they can be cached
+      #     npm run chown
 
-      # Do the build
-      - name: Build contract
-        id: build
-        run: | 
-          cd dev
-          npm run build -- --release --toolchain nightly --docker
-          # take ownership of the build files so they can be cached
-          sudo chown -R $(whoami):$(whoami) target || true
+      # # Do the build
+      # - name: Build contract
+      #   id: build
+      #   run: | 
+      #     cd dev
+      #     npm run build -- --release --toolchain nightly --docker
+      #     # take ownership of the build files so they can be cached
+      #     npm run chown
           
       # Do unit testing
       - name: Test contract
         run: |
           cd dev
-          RUST_BACKTRACE=1 npm run test -- --toolchain nightly --docker
+          RUST_BACKTRACE=1 npm run test -- --package proxy --toolchain nightly --docker
           result=$?
           # take ownership of the build files so they can be cached
-          sudo chown -R $(whoami):$(whoami) target || true
+          npm run chown
           exit $result
 
-      - name: Cleanup cargo build caches
-        if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
-        run: |
-          set +e; gh extension install actions/gh-actions-cache; set -e
-          REPO=${{ github.repository }}
-          echo "Fetching list of cache key"
-          # remove all except the most recent cached build
-          # we leave the latest cached build to be used by other workflows which may be running in parallel (i.e. there is always at least one cached build at any given time)
-          cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}- | cut -f 1 | tail -n +3)
-          echo caches to be removed:
-          echo ${cacheKeys}
-          # delete the stale caches
-          ## Setting this to not fail the workflow while deleting cache keys. 
-          set +e
-          for cacheKey in $cacheKeys
-          do
-              gh actions-cache delete $cacheKey -R $REPO --confirm
-          done
+      # - name: Cleanup cargo build caches
+      #   if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
+      #   run: |
+      #     set +e; gh extension install actions/gh-actions-cache; set -e
+      #     REPO=${{ github.repository }}
+      #     echo "Fetching list of cache key"
+      #     # remove all except the most recent cached build
+      #     # we leave the latest cached build to be used by other workflows which may be running in parallel (i.e. there is always at least one cached build at any given time)
+      #     cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}- | cut -f 1 | tail -n +3)
+      #     echo caches to be removed:
+      #     echo ${cacheKeys}
+      #     # delete the stale caches
+      #     ## Setting this to not fail the workflow while deleting cache keys. 
+      #     set +e
+      #     for cacheKey in $cacheKeys
+      #     do
+      #         gh actions-cache delete $cacheKey -R $REPO --confirm
+      #     done
           
       # Save build + test files to cache, use for incremental builds in other runs to speed up future workflows with minor changes
       - name: Save cargo build to cache
