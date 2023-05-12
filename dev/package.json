@@ -10,8 +10,7 @@
         "fmt": "ts-node src/cli.ts fmt",
         "clippy": "ts-node src/cli.ts clippy",
         "clean": "rm -rf ../crates/*/target ../contracts/*/target",
-        "clean-docker": "rm -rf ../docker-cache",
-        "chown": "sudo chown -R $(whoami):$(whoami) ../crates ../contracts ../docker-cache || true"
+        "chown": "sudo chown -R $(whoami):$(whoami) ../crates ../contracts || true"
     },
     "author": "Prosopo Limited",
     "license": "Apache-2.0",
