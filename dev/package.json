@@ -9,7 +9,8 @@
         "test": "ts-node src/cli.ts test",
         "fmt": "ts-node src/cli.ts fmt",
         "clippy": "ts-node src/cli.ts clippy",
-        "clean": "rm -rf src/*/target"
+        "clean": "rm -rf ../crates/*/target ../contracts/*/target",
+        "chown": "sudo chown -R $(whoami):$(whoami) ../crates/*/target ../contracts/*/target || true"
     },
     "author": "Prosopo Limited",
     "license": "Apache-2.0",
