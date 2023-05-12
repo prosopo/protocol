@@ -74,7 +74,7 @@ export async function processArgs(args: string[]) {
             demand: false,
             desc: 'Target a specific crate/contract',
             default: customPackages || [],
-            choices: customPackages || [],
+            choices: customPackages || packages,
         })
     }
 
