@@ -29,9 +29,6 @@ crate-type = [
     "cdylib",
     "rlib"
 ]
-# Needed until https://github.com/paritytech/ink/issues/364 is resolved.
-[profile.release]
-overflow-checks = false
 
 [features]
 default = ["std"]

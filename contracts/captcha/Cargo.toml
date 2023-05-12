@@ -32,9 +32,6 @@ crate-type = [
     # Used for normal contract Wasm blobs.
     "cdylib",
 ]
-# Needed until https://github.com/paritytech/ink/issues/364 is resolved.
-[profile.release]
-overflow-checks = false
 
 [features]
 default = ["std"]
