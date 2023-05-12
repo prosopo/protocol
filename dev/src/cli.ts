@@ -149,16 +149,18 @@ export async function processArgs(args: string[]) {
     }
 
     const execCargo = async (argv: yargs.Arguments<{}>, cmd: string, cmdArgs: string, dir?: string) => {
-        dir = dir ? dir : "."
         const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
-        const relDir = path.relative(repoDir, dir)
+        const relDir = path.relative(repoDir, dir || ".")
 
         let script: string = "";
         if(argv.docker) {
             initDocker();
             script = `docker run --rm -v ${contractsDir}:/repo/${relDirContracts} -v ${cratesDir}:/repo/${relDirCrates} -v ${rustupCacheDir}:${rustupDir} -v ${cargoCacheDir}:${cargoDir} paritytech/contracts-ci-linux:${contractsCiVersion} cargo ${toolchain} ${cmd} --manifest-path=/repo/${relDir}/Cargo.toml ${cmdArgs}`
         } else {
-            script = `cd ${repoDir} && cd ${dir} && cargo ${toolchain} ${cmd} ${cmdArgs}`
+            script = `cargo ${toolchain} ${cmd} ${cmdArgs}`
+            if(dir) {
+                script = `cd ${dir} && ${script}`
+            }
         }
 
         await exec(script)
