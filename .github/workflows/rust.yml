@@ -47,8 +47,8 @@ jobs:
           # pull out the rustup and cargo dirs from the docker image
           docker run --rm -v ~/.cargo:/target paritytech/contracts-ci-linux:41abf440-20230503 cp -ur /usr/local/cargo/. /target
           docker run --rm -v ~/.rustup:/target paritytech/contracts-ci-linux:41abf440-20230503 cp -ur /usr/local/rustup/. /target
-          chown -R $(whoami):$(whoami) ~/.cargo
-          chown -R $(whoami):$(whoami) ~/.rustup
+          sudo chown -R $(whoami):$(whoami) ~/.cargo
+          sudo chown -R $(whoami):$(whoami) ~/.rustup
           ls -la ~/.cargo
           ls -la ~/.rustup
           rustup show
