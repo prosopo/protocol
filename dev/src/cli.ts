@@ -247,8 +247,9 @@ export async function processArgs(args: string[]) {
                 return yargs
             },
             async (argv) => {
+                const check = argv.check ? '--check' : ''
                 const cmd = 'fmt'
-                const cmdArgs = '--all --verbose ${check}'
+                const cmdArgs = `--all --verbose ${check}`
                 
                 await execCargo(argv, cmd, cmdArgs)
             },
