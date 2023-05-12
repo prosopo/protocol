@@ -122,6 +122,4 @@ secrets.json
 # Ignore build target
 crates/*/target/
 contracts/*/target/
-
-# ignore the docker-cache
-docker-cache/
+target/
