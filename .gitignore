@@ -119,6 +119,9 @@ build/
 secrets.json
 .env
 
-# Ingnore build target
+# Ignore build target
 crates/*/target/
 contracts/*/target/
+
+# ignore the docker-cache
+docker-cache/
