@@ -52,6 +52,7 @@ jobs:
           ls -la ~/.cargo
           ls -la ~/.rustup
           rustup show
+          echo path: $PATH
 
       # Check if rust is formatted correctly
       - name: Rust formatting check
