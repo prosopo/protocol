@@ -56,12 +56,6 @@ export async function processArgs(args: string[]) {
     const repoDir = path.join(__dirname, '../..')
     const contractsDir = path.join(__dirname, '../../contracts')
     const cratesDir = path.join(__dirname, '../../crates')
-    const cargoDir = `/usr/local/cargo`
-    const rustupDir = `/usr/local/rustup`
-    const dockerCacheDir = `${repoDir}/docker-cache`
-    const rustupCacheDir = `${dockerCacheDir}/rustup`
-    const cargoCacheDir = `${dockerCacheDir}/cargo`
-    const relDirDockerCache = path.relative(repoDir, dockerCacheDir)
     const contractsCiVersion = '41abf440-20230503'
     const relDirContracts = path.relative(repoDir, contractsDir)
     const relDirCrates = path.relative(repoDir, cratesDir)
@@ -134,28 +128,24 @@ export async function processArgs(args: string[]) {
         })
     }
 
-    const initDocker = async () => {
+    const pullDockerImage = async () => {
         // check if the docker image is already pulled
         try {
             await exec(`docker images -q paritytech/contracts-ci-linux:${contractsCiVersion}`)
         } catch(e: any) {
             // if not, pull it
             await exec(`docker pull paritytech/contracts-ci-linux:${contractsCiVersion}`)
-
-            // update the docker cache with the default rustup and cargo dirs from the newly pulled image
-            await exec(`docker run --rm -v ${repoDir}/docker-cache:/docker-cache paritytech/contracts-ci-linux:${contractsCiVersion} cp -ur ${cargoDir} /${relDirDockerCache}/`)
-            await exec(`docker run --rm -v ${repoDir}/docker-cache:/docker-cache paritytech/contracts-ci-linux:${contractsCiVersion} cp -ur ${rustupDir} /${relDirDockerCache}/`)
         }
     }
 
     const execCargo = async (argv: yargs.Arguments<{}>, cmd: string, cmdArgs: string, dir?: string) => {
         const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
-        const relDir = path.relative(repoDir, dir || ".")
+        const relDir = path.relative(repoDir, dir || "..")
 
         let script: string = "";
         if(argv.docker) {
-            initDocker();
-            script = `docker run --rm -v ${contractsDir}:/repo/${relDirContracts} -v ${cratesDir}:/repo/${relDirCrates} -v ${rustupCacheDir}:${rustupDir} -v ${cargoCacheDir}:${cargoDir} paritytech/contracts-ci-linux:${contractsCiVersion} cargo ${toolchain} ${cmd} --manifest-path=/repo/${relDir}/Cargo.toml ${cmdArgs}`
+            pullDockerImage();
+            script = `docker run --rm -v ${repoDir}:/repo paritytech/contracts-ci-linux:${contractsCiVersion} cargo ${toolchain} ${cmd} --manifest-path=/repo/${relDir}/Cargo.toml ${cmdArgs}`
         } else {
             script = `cargo ${toolchain} ${cmd} ${cmdArgs}`
             if(dir) {
@@ -170,14 +160,6 @@ export async function processArgs(args: string[]) {
             // error should be printed to console in the exec function
             // error out after cleanup
             error = true;
-        }
-        
-        if(argv.docker) {
-            // if running under docker, cache the docker rustup and cargo files
-            // update any files which aren't already in the cache
-            // this is done after the build, as the build will have updated the files / added dependencies to the cargo cache, etc
-            await exec(`docker run --rm -v ${repoDir}/docker-cache:/docker-cache paritytech/contracts-ci-linux:${contractsCiVersion} cp -ur ${cargoDir} /${relDirDockerCache}/`)
-            await exec(`docker run --rm -v ${repoDir}/docker-cache:/docker-cache paritytech/contracts-ci-linux:${contractsCiVersion} cp -ur ${rustupDir} /${relDirDockerCache}/`)
         }
 
         await new Promise((resolve, reject) => {
