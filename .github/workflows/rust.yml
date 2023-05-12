@@ -37,11 +37,24 @@ jobs:
             echo "change=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Unpack contracts-ci
+        run: |
+          # clear default cargo and rustup on github actions runner
+          rm -rf ~/.cargo
+          rm -rf ~/.rustup
+          mkdir -p ~/.cargo
+          mkdir -p ~/.rustup
+          # pull out the rustup and cargo dirs from the docker image
+          docker run --rm -v ~/.cargo:/.cargo paritytech/contracts-ci-linux:41abf440-20230503 cp -ur /usr/local/cargo /.cargo
+          docker run --rm -v ~/.rustup:/.rustup paritytech/contracts-ci-linux:41abf440-20230503 cp -ur /usr/local/rustup /.rustup
+          ls -la ~/.cargo
+          ls -la ~/.rustup
+
       # Check if rust is formatted correctly
       - name: Rust formatting check
         run: |
           cd dev
-          npm run fmt -- --check --docker --toolchain nightly
+          npm run fmt -- --check --toolchain nightly
 
       # Restore the cargo build from cache, if available
       - name: Restore cached cargo build
@@ -68,20 +81,20 @@ jobs:
       - name: Clippy
         run: |
           cd dev
-          npm run clippy -- --docker --toolchain nightly
+          npm run clippy -- --toolchain nightly
 
       # Do the build
       - name: Build contract
         id: build
         run: | 
           cd dev
-          npm run build -- --release --docker --toolchain nightly
+          npm run build -- --release --toolchain nightly
           
       # Do unit testing
       - name: Test contract
         run: |
           cd dev
-          RUST_BACKTRACE=1 npm run test -- --docker --toolchain nightly
+          RUST_BACKTRACE=1 npm run test -- --toolchain nightly
           result=$?
           exit $result
 
