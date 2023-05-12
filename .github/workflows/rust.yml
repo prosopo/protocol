@@ -33,17 +33,20 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: |
-            contracts/*/target
-            crates/*/target
+            contracts/**/target
+            crates/**/target
           # the cached build is based on the OS, architecture, a tag and the hash of the config files for this build, i.e. the Cargo configuration. The cargo configs may differ across workflows, so the files have to be the same to reuse the cached build image across workflows
           # restore from a cache matching the key, e.g. "Linux-X64-cargo-env-abcdef123"
           # "abcdef123" could be anything, it is a random string to differentiate cache usages
           # e.g. "Linux-X64-cargo-a1" may be from 1/1/23, whereas "Linux-X64-cargo-b2" may be from 2/1/23.
           # github will match the most recent cache ("b2") when searching for caches and finding multiple matches
           # the "-" on the end of the key acts like "-*" where the "*" can be any number of characters, including none
-          key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
+          key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-
+            cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-
+            cargo-build-${{ runner.os }}-${{ runner.arch }}-
+            cargo-build-${{ runner.os }}-
+            cargo-build-
 
       # Check for clippy advice
       - name: Clippy
@@ -92,7 +95,7 @@ jobs:
         if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
         with:
           path: |
-            contracts/*/target
-            crates/*/target
+            contracts/**/target
+            crates/**/target
           # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same build without mutating them, as other workflows may be using them
           key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
