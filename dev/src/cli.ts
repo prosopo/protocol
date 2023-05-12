@@ -14,7 +14,7 @@ const exec = (command: string, pipe?: boolean) => {
         shell: true,
     });
 
-    if(pipe) {
+    if(pipe || pipe === undefined) {
         prc.stdout.pipe(process.stdout);
         prc.stderr.pipe(process.stderr);
     }
