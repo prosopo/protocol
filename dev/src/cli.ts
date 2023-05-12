@@ -150,7 +150,7 @@ export async function processArgs(args: string[]) {
 
     const execCargo = async (argv: yargs.Arguments<{}>, cmd: string, cmdArgs: string, dir?: string) => {
         const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
-        const relDir = path.relative(repoDir, dir)
+        const relDir = dir ? path.relative(repoDir, dir) : ""
 
         let script: string = "";
         if(argv.docker) {
