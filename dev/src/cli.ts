@@ -145,9 +145,6 @@ export async function processArgs(args: string[]) {
             // this is done after the build, as the build will have updated the files / added dependencies to the cargo cache, etc
             await exec(`docker run --rm -v ${repoDir}/docker-cache:/docker-cache paritytech/contracts-ci-linux:${contractsCiVersion} cp -ur ${cargoDir} /${relDirDockerCache}/`)
             await exec(`docker run --rm -v ${repoDir}/docker-cache:/docker-cache paritytech/contracts-ci-linux:${contractsCiVersion} cp -ur ${rustupDir} /${relDirDockerCache}/`)
-
-            // take ownership of any files which were created by docker, as docker runs as root, not the local user
-            await exec(`sudo chown -R $(whoami):$(whoami) ${cratesDir} ${contractsDir} ${dockerCacheDir} || true`)
         }
     }
 
