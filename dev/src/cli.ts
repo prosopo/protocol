@@ -189,7 +189,9 @@ export async function processArgs(args: string[]) {
                 const cmd = 'contract build'
                 const cmdArgs = `${mode}`
 
-                for(const contract of argv.package as string[] || []) {
+                const contracts = argv.package as string[];
+                delete argv.package;
+                for(const contract of contracts) {
                     await execCargo(argv, cmd, cmdArgs, `${contractsDir}/${contract}`)
                 }
             },
