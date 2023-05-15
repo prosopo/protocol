@@ -1039,7 +1039,7 @@ pub mod prosopo {
         #[ink(message)]
         pub fn provider_commit_many(&mut self, commits: Vec<Commit>) -> Result<(), Error> {
             for commit in commits.iter() {
-                self.provider_record_commit(&commit)?;
+                self.provider_record_commit(commit)?;
             }
 
             Ok(())
