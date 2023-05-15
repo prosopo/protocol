@@ -239,7 +239,7 @@ pub mod prosopo {
         dapp_users: Mapping<AccountId, User>,
         dapp_user_accounts: Lazy<Vec<AccountId>>,
         max_user_history_len: u16, // the max number of captcha results to store in history for a user
-        max_user_history_age: u64, // the max age of captcha results to store in history for a user
+        max_user_history_age: BlockNumber, // the max age, in blocks, of captcha results to store in history for a user
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
     }
@@ -309,7 +309,7 @@ pub mod prosopo {
             provider_stake_threshold: Balance,
             dapp_stake_threshold: Balance,
             max_user_history_len: u16,
-            max_user_history_age: u64,
+            max_user_history_age: BlockNumber,
             min_num_active_providers: u16,
             max_provider_fee: Balance,
         ) -> Self {
@@ -331,7 +331,7 @@ pub mod prosopo {
             provider_stake_threshold: Balance,
             dapp_stake_threshold: Balance,
             max_user_history_len: u16,
-            max_user_history_age: u64,
+            max_user_history_age: BlockNumber,
             min_num_active_providers: u16,
             max_provider_fee: Balance,
         ) -> Self {
@@ -898,14 +898,13 @@ pub mod prosopo {
         /// Trim the user history to the max length and age.
         /// Returns the history and expired hashes.
         fn trim_user_history(&self, mut history: Vec<Hash>) -> (Vec<Hash>, Vec<Hash>) {
-            // note that the age is based on the block timestamp, so calling this method as blocks roll over will result in different outcomes as the age threshold will change but the history will not (assuming no new results are added)
-            let block_timestamp = self.env().block_timestamp();
-            let max_age = if block_timestamp < self.max_user_history_age {
-                block_timestamp
+            let block_number = self.env().block_number();
+            let max_age = if block_number < self.max_user_history_age {
+                block_number
             } else {
                 self.max_user_history_age
             };
-            let age_threshold = block_timestamp - max_age;
+            let age_threshold = block_number - max_age;
             let mut expired = Vec::new();
             // trim the history down to max length
             while history.len() > self.max_user_history_len.into() {
