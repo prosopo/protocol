@@ -313,6 +313,8 @@ pub mod prosopo {
         ProviderFeeTooHigh,
         /// Returned if the commitment already exists
         CaptchaSolutionCommitmentAlreadyExists,
+        /// Returned if verification of a signature fails (could be for many reasons, e.g. invalid public key, invalid payload, invalid signature)
+        VerifyFailed,
     }
 
     impl Prosopo {
@@ -381,26 +383,21 @@ pub mod prosopo {
             &self,
             signature: [u8; 64],
             payload: [u8; 49],
-        ) -> Result<bool, Error> {
+        ) -> Result<(), Error> {
             let caller = self.env().caller();
             let mut caller_bytes = [0u8; 32];
             let caller_ref: &[u8] = caller.as_ref();
             caller_bytes.copy_from_slice(&caller_ref[..32]);
 
-            debug!("caller {:?}", caller);
-            debug!("sig {:?}", signature);
-            debug!("payload {:?}", payload);
-
-            // let sig = Signature::from_bytes(&signature).map_err(|_| Error::InvalidSignature)?;
-            // let pub_key =
-            //     PublicKey::from_bytes(&caller_bytes).map_err(|_| Error::InvalidPublicKey)?;
-            // let res = pub_key.verify_simple(crate::CTX, &payload, &sig);
-            // Ok(res.is_ok())
-
             let res = self
                 .env()
                 .sr25519_verify(&signature, &payload, &caller_bytes);
-            Ok(res.is_ok())
+            
+            if res.is_err() {
+                return Err(Error::VerifyFailed);
+            }
+
+            Ok(())
         }
 
         #[ink(message)]
