@@ -248,7 +248,7 @@ pub mod prosopo {
         dapp_accounts: Lazy<BTreeSet<AccountId>>,
         captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>, // the commitments submitted by DappUsers
         dapp_users: Mapping<AccountId, User>,
-        dapp_user_accounts: Lazy<Vec<AccountId>>,
+        dapp_user_accounts: Lazy<BTreeSet<AccountId>>,
         max_user_history_len: u16, // the max number of captcha results to store in history for a user
         max_user_history_age: u64, // the max age of captcha results to store in history for a user
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
@@ -1014,7 +1014,7 @@ pub mod prosopo {
             };
             self.dapp_users.insert(account, &user);
             let mut dapp_user_accounts = self.dapp_user_accounts.get_or_default();
-            dapp_user_accounts.push(account);
+            dapp_user_accounts.insert(account);
             self.dapp_user_accounts.set(&dapp_user_accounts);
             user
         }
