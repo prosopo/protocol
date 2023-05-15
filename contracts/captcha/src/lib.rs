@@ -318,7 +318,7 @@ pub mod prosopo {
     impl Prosopo {
         /// Constructor
         #[ink(constructor, payable)]
-        pub fn default(
+        pub fn new(
             provider_stake_threshold: Balance,
             dapp_stake_threshold: Balance,
             max_user_history_len: u16,
