@@ -1114,10 +1114,12 @@ pub mod prosopo {
                 return Err(Error::NoCorrectCaptcha);
             }
 
+            let last_correct_captcha = last_correct_captcha.unwrap();
+
             Ok(LastCorrectCaptcha {
                 before: self.env().block_number()
-                    - last_correct_captcha.unwrap().completed_at,
-                dapp_id: last_correct_captcha.unwrap().contract,
+                    - last_correct_captcha.completed_at,
+                dapp_id: last_correct_captcha.contract,
             })
         }
 
