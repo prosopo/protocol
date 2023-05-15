@@ -2414,10 +2414,9 @@ pub mod prosopo {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
                 // verify the signature
-                let valid = contract
+                contract
                     .verify_sr25519(signature_bytes, payload_bytes)
                     .unwrap();
-                assert!(valid);
             }
 
             #[ink::test]
@@ -2456,10 +2455,9 @@ pub mod prosopo {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
                 // verify the signature
-                let valid = contract
+                contract
                     .verify_sr25519(signature_bytes, payload_bytes)
-                    .unwrap();
-                assert!(!valid);
+                    .unwrap_err();
             }
 
             #[ink::test]
@@ -2538,10 +2536,9 @@ pub mod prosopo {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
                 // verify the signature
-                let valid = contract
+                contract
                     .verify_sr25519(signature_bytes, payload_bytes)
-                    .unwrap();
-                assert!(!valid);
+                    .unwrap_err();
             }
 
             #[ink::test]
@@ -2580,10 +2577,9 @@ pub mod prosopo {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
                 // verify the signature
-                let valid = contract
+                contract
                     .verify_sr25519(signature_bytes, payload_bytes)
-                    .unwrap();
-                assert!(!valid);
+                    .unwrap_err();
             }
 
             /// Test dapp register and then update
