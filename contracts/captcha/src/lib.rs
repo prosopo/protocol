@@ -168,18 +168,15 @@ pub mod prosopo {
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct CaptchaSolutionCommitment {
-        // the Dapp User Account
-        account: AccountId,
-        // The captcha dataset id (dataset_id in Provider / CaptchaData)
-        dataset_id: Hash,
-        // Status of this solution - correct / incorrect?
-        status: CaptchaStatus,
-        // The Dapp Contract AccountId that the Dapp User wants to interact with
-        contract: AccountId,
-        // The Provider AccountId that is permitted to approve or disapprove the commitment
-        provider: AccountId,
-        // Time of completion
-        completed_at: Timestamp,
+        id: Hash, // the commitment id
+        user: AccountId, // the user who submitted the commitment
+        dataset_id: Hash, // the dataset id
+        status: CaptchaStatus, // the status of the commitment
+        contract: AccountId, // the dapp which the user completed the captcha on
+        provider: AccountId, // the provider who supplied the challenge
+        requested_at: BlockNumber, // the block number at which the captcha was requested
+        completed_at: BlockNumber, // the block number at which the captcha was completed
+        user_signature: [u8; 64], // the user's signature of the commitment
     }
 
     /// DApps are distributed apps who want their users to be verified by Providers, either paying
