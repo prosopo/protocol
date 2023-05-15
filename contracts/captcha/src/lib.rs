@@ -1006,33 +1006,44 @@ pub mod prosopo {
             user
         }
 
-        /// Provider submits a captcha solution commitment
-        #[ink(message)]
-        pub fn provider_commit(
-            &mut self,
-            captcha_solution_commitment_id: Hash,
-            commitment: CaptchaSolutionCommitment,
-        ) -> Result<(), Error> {
+        fn provider_commit_single(&mut self, commit: &CaptchaSolutionCommitment) -> Result<(), Error> {
             let caller = self.env().caller();
+
+            // ensure the provider is active
             self.validate_provider_active(caller)?;
-            self.validate_dapp(commitment.contract)?;
+            // ensure the dapp is active
+            self.validate_dapp(commit.dapp)?;
 
             // check commitment doesn't already exist
             if self
                 .captcha_solution_commitments
-                .get(captcha_solution_commitment_id)
+                .get(commit.id)
                 .is_some()
             {
                 return err!(Error::CaptchaSolutionCommitmentAlreadyExists);
             }
 
             self.record_commitment(
-                commitment.account,
-                captcha_solution_commitment_id,
-                commitment,
+                commit.user,
+                commit.id,
+                commit,
             );
 
-            self.pay_fee(&caller, &commitment.contract)?;
+            self.pay_fee(&caller, &commit.dapp)?;
+
+            Ok(())
+        }
+
+        /// Provider submits 0-many captcha solution commitments
+        #[ink(message)]
+        pub fn provider_commit(
+            &mut self,
+            commits: Vec<CaptchaSolutionCommitment>,
+        ) -> Result<(), Error> {
+
+            for commit in commits.iter() {
+                self.provider_commit_single(commit)?;
+            }
 
             Ok(())
         }
