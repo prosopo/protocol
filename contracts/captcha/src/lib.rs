@@ -932,14 +932,14 @@ pub mod prosopo {
             &mut self,
             account: AccountId,
             hash: Hash,
-            result: CaptchaSolutionCommitment,
+            result: &CaptchaSolutionCommitment,
         ) {
             let mut user = self
                 .dapp_users
                 .get(account)
                 .unwrap_or_else(|| self.create_new_dapp_user(account));
             // add the new commitment
-            self.captcha_solution_commitments.insert(hash, &result);
+            self.captcha_solution_commitments.insert(hash, result);
             user.history.insert(0, hash);
 
             // trim the user history by len and age, removing any expired commitments
@@ -1005,13 +1005,13 @@ pub mod prosopo {
             user
         }
 
-        fn provider_commit_single(&mut self, commit: &CaptchaSolutionCommitment) -> Result<(), Error> {
+        fn provider_record_commit(&mut self, commit: &CaptchaSolutionCommitment) -> Result<(), Error> {
             let caller = self.env().caller();
 
             // ensure the provider is active
             self.validate_provider_active(caller)?;
             // ensure the dapp is active
-            self.validate_dapp(commit.dapp)?;
+            self.validate_dapp(commit.contract)?;
 
             // check commitment doesn't already exist
             if self
@@ -1023,25 +1023,30 @@ pub mod prosopo {
             }
 
             self.record_commitment(
-                commit.user,
+                commit.account,
                 commit.id,
                 commit,
             );
 
-            self.pay_fee(&caller, &commit.dapp)?;
+            self.pay_fee(&caller, &commit.contract)?;
 
             Ok(())
         }
 
+        #[ink(message)]
+        pub fn provider_commit(&mut self, commit: CaptchaSolutionCommitment) -> Result<(), Error> {
+            self.provider_record_commit(&commit)
+        }
+
         /// Provider submits 0-many captcha solution commitments
         #[ink(message)]
-        pub fn provider_commit(
+        pub fn provider_commit_many(
             &mut self,
             commits: Vec<CaptchaSolutionCommitment>,
         ) -> Result<(), Error> {
 
             for commit in commits.iter() {
-                self.provider_commit_single(commit)?;
+                self.provider_record_commit(&commit)?;
             }
 
             Ok(())
