@@ -212,7 +212,7 @@ pub mod prosopo {
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct LastCorrectCaptcha {
-        pub before_ms: u64,
+        pub before: BlockNumber,
         pub dapp_id: AccountId,
     }
 
@@ -1111,7 +1111,7 @@ pub mod prosopo {
             }
 
             Ok(LastCorrectCaptcha {
-                before_ms: self.env().block_timestamp()
+                before: self.env().block_number()
                     - last_correct_captcha.unwrap().completed_at,
                 dapp_id: last_correct_captcha.unwrap().contract,
             })
