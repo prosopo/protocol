@@ -165,18 +165,18 @@ pub mod prosopo {
     /// CaptchaSolutionCommitments are submitted by DAppUsers upon completion of one or more
     /// Captchas. They serve as proof of captcha completion to the outside world and can be used
     /// in dispute resolution.
-    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct CaptchaSolutionCommitment {
         id: Hash, // the commitment id
-        user: AccountId, // the user who submitted the commitment
+        account: AccountId, // the user who submitted the commitment
         dataset_id: Hash, // the dataset id
         status: CaptchaStatus, // the status of the commitment
         contract: AccountId, // the dapp which the user completed the captcha on
         provider: AccountId, // the provider who supplied the challenge
         requested_at: BlockNumber, // the block number at which the captcha was requested
         completed_at: BlockNumber, // the block number at which the captcha was completed
-        user_signature: [u8; 64], // the user's signature of the commitment
+        user_signature: Vec<u8>, // the user's signature of the commitment
     }
 
     /// DApps are distributed apps who want their users to be verified by Providers, either paying
