@@ -379,11 +379,7 @@ pub mod prosopo {
         ///
         /// Note the signature must be sr25519 type.
         #[ink(message)]
-        pub fn verify_sr25519(
-            &self,
-            signature: [u8; 64],
-            payload: [u8; 49],
-        ) -> Result<(), Error> {
+        pub fn verify_sr25519(&self, signature: [u8; 64], payload: [u8; 49]) -> Result<(), Error> {
             let caller = self.env().caller();
             let mut caller_bytes = [0u8; 32];
             let caller_ref: &[u8] = caller.as_ref();
@@ -392,7 +388,7 @@ pub mod prosopo {
             let res = self
                 .env()
                 .sr25519_verify(&signature, &payload, &caller_bytes);
-            
+
             if res.is_err() {
                 return Err(Error::VerifyFailed);
             }
