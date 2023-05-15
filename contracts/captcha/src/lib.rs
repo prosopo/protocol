@@ -2786,15 +2786,17 @@ pub mod prosopo {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 let solution_id = user_root;
                 contract.provider_commit(
-                    solution_id,
-                    CaptchaSolutionCommitment {
-                        contract: dapp_contract_account,
-                        dataset_id: user_root,
-                        status: CaptchaStatus::Approved,
-                        provider: provider_account,
-                        account: dapp_user_account,
-                        completed_at: 0,
-                    },
+                        CaptchaSolutionCommitment {
+                            contract: dapp_contract_account,
+                            dataset_id: user_root,
+                            status: CaptchaStatus::Approved,
+                            provider: provider_account,
+                            account: dapp_user_account,
+                            completed_at: 0,
+                            requested_at: 0,
+                            id: solution_id,
+                            user_signature: Vec::new(),
+                        },
                 );
                 let commitment = contract
                     .captcha_solution_commitments
@@ -2810,15 +2812,17 @@ pub mod prosopo {
                 // sure that the dapp balance is unchanged
 
                 contract.provider_commit(
-                    solution_id,
-                    CaptchaSolutionCommitment {
-                        contract: dapp_contract_account,
-                        dataset_id: user_root,
-                        status: CaptchaStatus::Disapproved,
-                        provider: provider_account,
-                        account: dapp_user_account,
-                        completed_at: 0,
-                    },
+                        CaptchaSolutionCommitment {
+                            contract: dapp_contract_account,
+                            dataset_id: user_root,
+                            status: CaptchaStatus::Disapproved,
+                            provider: provider_account,
+                            account: dapp_user_account,
+                            completed_at: 0,
+                            requested_at: 0,
+                            id: solution_id,
+                            user_signature: Vec::new(),
+                        }    
                 );
                 let commitment = contract
                     .captcha_solution_commitments
@@ -2886,7 +2890,7 @@ pub mod prosopo {
                 let solution_id = str_to_hash("id that does not exist".to_string());
 
                 let result = contract.provider_commit(
-                    solution_id,
+
                     CaptchaSolutionCommitment {
                         contract: dapp_contract_account,
                         dataset_id: user_root,
@@ -2894,6 +2898,9 @@ pub mod prosopo {
                         provider: provider_account,
                         account: dapp_user_account,
                         completed_at: 0,
+                        requested_at: 0,
+                        id: solution_id,
+                        user_signature: Vec::new(),
                     },
                 );
             }
@@ -2954,14 +2961,15 @@ pub mod prosopo {
                 let solution_id = user_root;
                 contract
                     .provider_commit(
-                        solution_id,
-                        CaptchaSolutionCommitment {
-                            contract: dapp_contract_account,
+                        CaptchaSolutionCommitment {contract: dapp_contract_account,
                             dataset_id: user_root,
                             status: CaptchaStatus::Disapproved,
                             provider: provider_account,
                             account: dapp_user_account,
                             completed_at: 0,
+                            requested_at: 0,
+                            id: solution_id,
+                            user_signature: Vec::new(),
                         },
                     )
                     .unwrap();
@@ -2977,7 +2985,7 @@ pub mod prosopo {
 
                 // Now make sure that the provider cannot later set the solution to approved
                 contract.provider_commit(
-                    solution_id,
+
                     CaptchaSolutionCommitment {
                         contract: dapp_contract_account,
                         dataset_id: user_root,
@@ -2985,6 +2993,9 @@ pub mod prosopo {
                         provider: provider_account,
                         account: dapp_user_account,
                         completed_at: 0,
+                        requested_at: 0,
+                        id: solution_id,
+                        user_signature: Vec::new(),
                     },
                 );
                 let commitment = contract
@@ -3055,14 +3066,16 @@ pub mod prosopo {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 let solution_id = user_root;
                 contract.provider_commit(
-                    solution_id,
-                    CaptchaSolutionCommitment {
-                        contract: dapp_contract_account,
+
+                    CaptchaSolutionCommitment {contract: dapp_contract_account,
                         dataset_id: user_root,
                         status: CaptchaStatus::Disapproved,
                         provider: provider_account,
                         account: dapp_user_account,
                         completed_at: 0,
+                        requested_at: 0,
+                        id: solution_id,
+                        user_signature: Vec::new(),
                     },
                 );
                 let commitment = contract
@@ -3239,14 +3252,17 @@ pub mod prosopo {
                 let dapp_user_account = AccountId::from([0x5; 32]);
                 let user_root1 = str_to_hash("user merkle tree root to approve".to_string());
                 contract.provider_commit(
-                    user_root1,
+
                     CaptchaSolutionCommitment {
                         contract: dapp_contract_account,
-                        dataset_id: root1,
+                        dataset_id: user_root1,
                         status: CaptchaStatus::Approved,
                         provider: provider_account,
                         account: dapp_user_account,
                         completed_at: 0,
+                        requested_at: 0,
+                        id: user_root1,
+                        user_signature: Vec::new(),
                     },
                 );
 
@@ -3260,7 +3276,7 @@ pub mod prosopo {
                 let dapp_user_account = AccountId::from([0x5; 32]);
                 let user_root2 = str_to_hash("user merkle tree root to disapprove".to_string());
                 contract.provider_commit(
-                    user_root2,
+
                     CaptchaSolutionCommitment {
                         contract: dapp_contract_account,
                         dataset_id: root2,
@@ -3268,6 +3284,9 @@ pub mod prosopo {
                         provider: provider_account,
                         account: dapp_user_account,
                         completed_at: 0,
+                        requested_at: 0,
+                        id: user_root2,
+                        user_signature: Vec::new(),
                     },
                 );
 
