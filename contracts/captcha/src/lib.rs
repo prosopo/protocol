@@ -169,10 +169,10 @@ pub mod prosopo {
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct CaptchaSolutionCommitment {
         id: Hash, // the commitment id
-        account: AccountId, // the user who submitted the commitment
+        user: AccountId, // the user who submitted the commitment
         dataset_id: Hash, // the dataset id
         status: CaptchaStatus, // the status of the commitment
-        contract: AccountId, // the dapp which the user completed the captcha on
+        dapp: AccountId, // the dapp which the user completed the captcha on
         provider: AccountId, // the provider who supplied the challenge
         requested_at: BlockNumber, // the block number at which the captcha was requested
         completed_at: BlockNumber, // the block number at which the captcha was completed
@@ -1011,7 +1011,7 @@ pub mod prosopo {
             // ensure the provider is active
             self.validate_provider_active(caller)?;
             // ensure the dapp is active
-            self.validate_dapp(commit.contract)?;
+            self.validate_dapp(commit.dapp)?;
 
             // check commitment doesn't already exist
             if self
@@ -1023,12 +1023,12 @@ pub mod prosopo {
             }
 
             self.record_commitment(
-                commit.account,
+                commit.user,
                 commit.id,
                 commit,
             );
 
-            self.pay_fee(&caller, &commit.contract)?;
+            self.pay_fee(&caller, &commit.dapp)?;
 
             Ok(())
         }
@@ -1119,7 +1119,7 @@ pub mod prosopo {
             Ok(LastCorrectCaptcha {
                 before: self.env().block_number()
                     - last_correct_captcha.completed_at,
-                dapp_id: last_correct_captcha.contract,
+                dapp_id: last_correct_captcha.dapp,
             })
         }
 
@@ -2787,11 +2787,11 @@ pub mod prosopo {
                 let solution_id = user_root;
                 contract.provider_commit(
                         CaptchaSolutionCommitment {
-                            contract: dapp_contract_account,
+                            dapp: dapp_contract_account,
                             dataset_id: user_root,
                             status: CaptchaStatus::Approved,
                             provider: provider_account,
-                            account: dapp_user_account,
+                            user: dapp_user_account,
                             completed_at: 0,
                             requested_at: 0,
                             id: solution_id,
@@ -2813,11 +2813,11 @@ pub mod prosopo {
 
                 contract.provider_commit(
                         CaptchaSolutionCommitment {
-                            contract: dapp_contract_account,
+                            dapp: dapp_contract_account,
                             dataset_id: user_root,
                             status: CaptchaStatus::Disapproved,
                             provider: provider_account,
-                            account: dapp_user_account,
+                            user: dapp_user_account,
                             completed_at: 0,
                             requested_at: 0,
                             id: solution_id,
@@ -2892,11 +2892,11 @@ pub mod prosopo {
                 let result = contract.provider_commit(
 
                     CaptchaSolutionCommitment {
-                        contract: dapp_contract_account,
+                        dapp: dapp_contract_account,
                         dataset_id: user_root,
                         status: CaptchaStatus::Approved,
                         provider: provider_account,
-                        account: dapp_user_account,
+                        user: dapp_user_account,
                         completed_at: 0,
                         requested_at: 0,
                         id: solution_id,
@@ -2961,11 +2961,11 @@ pub mod prosopo {
                 let solution_id = user_root;
                 contract
                     .provider_commit(
-                        CaptchaSolutionCommitment {contract: dapp_contract_account,
+                        CaptchaSolutionCommitment {dapp: dapp_contract_account,
                             dataset_id: user_root,
                             status: CaptchaStatus::Disapproved,
                             provider: provider_account,
-                            account: dapp_user_account,
+                            user: dapp_user_account,
                             completed_at: 0,
                             requested_at: 0,
                             id: solution_id,
@@ -2987,11 +2987,11 @@ pub mod prosopo {
                 contract.provider_commit(
 
                     CaptchaSolutionCommitment {
-                        contract: dapp_contract_account,
+                        dapp: dapp_contract_account,
                         dataset_id: user_root,
                         status: CaptchaStatus::Approved,
                         provider: provider_account,
-                        account: dapp_user_account,
+                        user: dapp_user_account,
                         completed_at: 0,
                         requested_at: 0,
                         id: solution_id,
@@ -3067,11 +3067,11 @@ pub mod prosopo {
                 let solution_id = user_root;
                 contract.provider_commit(
 
-                    CaptchaSolutionCommitment {contract: dapp_contract_account,
+                    CaptchaSolutionCommitment {dapp: dapp_contract_account,
                         dataset_id: user_root,
                         status: CaptchaStatus::Disapproved,
                         provider: provider_account,
-                        account: dapp_user_account,
+                        user: dapp_user_account,
                         completed_at: 0,
                         requested_at: 0,
                         id: solution_id,
@@ -3254,11 +3254,11 @@ pub mod prosopo {
                 contract.provider_commit(
 
                     CaptchaSolutionCommitment {
-                        contract: dapp_contract_account,
+                        dapp: dapp_contract_account,
                         dataset_id: user_root1,
                         status: CaptchaStatus::Approved,
                         provider: provider_account,
-                        account: dapp_user_account,
+                        user: dapp_user_account,
                         completed_at: 0,
                         requested_at: 0,
                         id: user_root1,
@@ -3278,11 +3278,11 @@ pub mod prosopo {
                 contract.provider_commit(
 
                     CaptchaSolutionCommitment {
-                        contract: dapp_contract_account,
+                        dapp: dapp_contract_account,
                         dataset_id: root2,
                         status: CaptchaStatus::Disapproved,
                         provider: provider_account,
-                        account: dapp_user_account,
+                        user: dapp_user_account,
                         completed_at: 0,
                         requested_at: 0,
                         id: user_root2,
