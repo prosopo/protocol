@@ -245,7 +245,7 @@ pub mod prosopo {
         dapp_accounts: Lazy<BTreeSet<AccountId>>,
         captcha_solution_commitments: Mapping<Hash, Commit>, // the commitments submitted by DappUsers
         dapp_users: Mapping<AccountId, User>,
-        dapp_user_accounts: Lazy<Vec<AccountId>>,
+        user_accounts: Lazy<BTreeSet<AccountId>>,
         max_user_history_len: u16, // the max number of captcha results to store in history for a user
         max_user_history_age: BlockNumber, // the max age, in blocks, of captcha results to store in history for a user
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
@@ -310,12 +310,15 @@ pub mod prosopo {
         ProviderFeeTooHigh,
         /// Returned if the commitment already exists
         CommitAlreadyExists,
+        CaptchaSolutionCommitmentAlreadyExists,
+        /// Returned if verification of a signature fails (could be for many reasons, e.g. invalid public key, invalid payload, invalid signature)
+        VerifyFailed,
     }
 
     impl Prosopo {
         /// Constructor
         #[ink(constructor, payable)]
-        pub fn default(
+        pub fn new(
             provider_stake_threshold: Balance,
             dapp_stake_threshold: Balance,
             max_user_history_len: u16,
@@ -356,7 +359,7 @@ pub mod prosopo {
                 dapp_stake_threshold,
                 dapps: Default::default(),
                 dapp_accounts: Default::default(),
-                dapp_user_accounts: Default::default(),
+                user_accounts: Default::default(),
                 max_user_history_len,
                 max_user_history_age,
                 captcha_solution_commitments: Default::default(),
@@ -374,30 +377,21 @@ pub mod prosopo {
         ///
         /// Note the signature must be sr25519 type.
         #[ink(message)]
-        pub fn verify_sr25519(
-            &self,
-            signature: [u8; 64],
-            payload: [u8; 49],
-        ) -> Result<bool, Error> {
+        pub fn verify_sr25519(&self, signature: [u8; 64], payload: [u8; 49]) -> Result<(), Error> {
             let caller = self.env().caller();
             let mut caller_bytes = [0u8; 32];
             let caller_ref: &[u8] = caller.as_ref();
             caller_bytes.copy_from_slice(&caller_ref[..32]);
 
-            debug!("caller {:?}", caller);
-            debug!("sig {:?}", signature);
-            debug!("payload {:?}", payload);
-
-            // let sig = Signature::from_bytes(&signature).map_err(|_| Error::InvalidSignature)?;
-            // let pub_key =
-            //     PublicKey::from_bytes(&caller_bytes).map_err(|_| Error::InvalidPublicKey)?;
-            // let res = pub_key.verify_simple(crate::CTX, &payload, &sig);
-            // Ok(res.is_ok())
-
             let res = self
                 .env()
                 .sr25519_verify(&signature, &payload, &caller_bytes);
-            Ok(res.is_ok())
+
+            if res.is_err() {
+                return Err(Error::VerifyFailed);
+            }
+
+            Ok(())
         }
 
         #[ink(message)]
@@ -1004,9 +998,9 @@ pub mod prosopo {
                 history: Default::default(),
             };
             self.dapp_users.insert(account, &user);
-            let mut dapp_user_accounts = self.dapp_user_accounts.get_or_default();
-            dapp_user_accounts.push(account);
-            self.dapp_user_accounts.set(&dapp_user_accounts);
+            let mut user_accounts = self.user_accounts.get_or_default();
+            user_accounts.insert(account);
+            self.user_accounts.set(&user_accounts);
             user
         }
 
@@ -1650,8 +1644,7 @@ pub mod prosopo {
 
                 // only able to instantiate from the alice account
                 set_caller(default_accounts().alice);
-                let contract =
-                    Prosopo::default(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
+                let contract = Prosopo::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
                 // should construct successfully
             }
 
@@ -1663,8 +1656,7 @@ pub mod prosopo {
 
                 // only able to instantiate from the alice account
                 set_caller(default_accounts().bob);
-                let contract =
-                    Prosopo::default(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
+                let contract = Prosopo::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
                 // should fail to construct and panic
             }
 
@@ -1697,7 +1689,7 @@ pub mod prosopo {
                     }
                 }
                 assert_eq!(contract.dapp_accounts.get(), None);
-                assert_eq!(contract.dapp_user_accounts.get(), None);
+                assert_eq!(contract.user_accounts.get(), None);
             }
 
             /// Test accounts are funded with existential deposit
@@ -2413,10 +2405,9 @@ pub mod prosopo {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
                 // verify the signature
-                let valid = contract
+                contract
                     .verify_sr25519(signature_bytes, payload_bytes)
                     .unwrap();
-                assert!(valid);
             }
 
             #[ink::test]
@@ -2455,10 +2446,9 @@ pub mod prosopo {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
                 // verify the signature
-                let valid = contract
+                contract
                     .verify_sr25519(signature_bytes, payload_bytes)
-                    .unwrap();
-                assert!(!valid);
+                    .unwrap_err();
             }
 
             #[ink::test]
@@ -2537,10 +2527,9 @@ pub mod prosopo {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
                 // verify the signature
-                let valid = contract
+                contract
                     .verify_sr25519(signature_bytes, payload_bytes)
-                    .unwrap();
-                assert!(!valid);
+                    .unwrap_err();
             }
 
             #[ink::test]
@@ -2579,10 +2568,9 @@ pub mod prosopo {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
                 // verify the signature
-                let valid = contract
+                contract
                     .verify_sr25519(signature_bytes, payload_bytes)
-                    .unwrap();
-                assert!(!valid);
+                    .unwrap_err();
             }
 
             /// Test dapp register and then update
