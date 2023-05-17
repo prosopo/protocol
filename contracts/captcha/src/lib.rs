@@ -17,23 +17,6 @@
 
 pub use self::prosopo::{Prosopo, ProsopoRef};
 
-/// Print and return an error in ink
-macro_rules! err {
-    ($err:expr) => {{
-        Err(get_self!().print_err($err, function_name!()))
-    }};
-}
-
-// ($err:expr) => (
-// |$err| crate::print_error($err, function_name!(), get_self!().env().block_number(), get_self!().env().caller())
-// );
-
-macro_rules! err_fn {
-    ($err:expr) => {
-        || get_self!().print_err($err, function_name!())
-    };
-}
-
 macro_rules! lazy {
     ($lazy:expr, $func:ident, $value:expr) => {
         let mut contents = $lazy.get_or_default();
@@ -59,12 +42,13 @@ pub mod prosopo {
     use ink::env::debug_println as debug;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
-
     use ink::prelude::vec;
     use ink::prelude::vec::Vec;
     use ink::storage::Lazy;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
+    use util::err;
+    use util::err_fn;
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(

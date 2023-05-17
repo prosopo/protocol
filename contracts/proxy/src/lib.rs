@@ -1,18 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-/// Print and return an error in ink
-macro_rules! err {
-    ($err:expr) => {{
-        Err(get_self!().print_err($err, function_name!()))
-    }};
-}
-
-// macro_rules! err_fn {
-//     ($err:expr) => {
-//         || get_self!().print_err($err, function_name!())
-//     };
-// }
-
 #[allow(unused_macros)]
 #[named_functions_macro::named_functions] // allows the use of the function_name!() macro
 #[inject_self_macro::inject_self] // allows the use of the get_self!() macro
@@ -22,6 +9,8 @@ pub mod proxy {
     use ink::env::debug_println as debug;
     use ink::storage::traits::StorageLayout;
     use util::abc::def;
+    use util::err;
+    use util::err_fn;
 
     #[ink(storage)]
     pub struct Proxy {
