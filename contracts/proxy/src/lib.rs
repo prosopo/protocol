@@ -7,6 +7,7 @@
 pub mod proxy {
 
     use ink::env::debug_println as debug;
+    #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::traits::StorageLayout;
     use common::err;
 
