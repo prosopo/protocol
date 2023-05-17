@@ -8,7 +8,6 @@ macro_rules! err {
         ink::env::debug_println!(
             "'{:?}' error in {:?}() at block {:?} with caller {:?}",
             $e,
-            // "module_name".to_string(),
             function_name!(),
             self_.env().block_number(),
             self_.env().caller(),

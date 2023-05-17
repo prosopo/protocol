@@ -655,14 +655,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "named_module_macro"
-version = "0.3.0"
-dependencies = [
- "proc-macro2",
- "quote",
-]
-
-[[package]]
 name = "num-traits"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -743,7 +735,6 @@ dependencies = [
  "inject_self_macro",
  "ink",
  "named_functions_macro",
- "named_module_macro",
  "parity-scale-codec",
  "scale-info",
 ]

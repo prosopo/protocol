@@ -2,7 +2,6 @@
 
 #[allow(unused_macros)]
 #[named_functions_macro::named_functions] // allows the use of the function_name!() macro
-#[named_module_macro::named_functions] // allows the use of the mod_name!() macro
 #[inject_self_macro::inject_self] // allows the use of the get_self!() macro
 #[ink::contract]
 pub mod proxy {
