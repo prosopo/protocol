@@ -21,7 +21,7 @@ pub mod proxy {
 
     use ink::env::debug_println as debug;
     use ink::storage::traits::StorageLayout;
-    use printerr_macro::abc::def;
+    use util::abc::def;
 
     #[ink(storage)]
     pub struct Proxy {

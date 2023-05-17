@@ -21,9 +21,9 @@ path = "../../crates/named_functions_macro"
 version = "0.3.0"
 path = "../../crates/disable_macro"
 
-[dependencies.printerr_macro]
+[dependencies.util]
 version = "0.3.0"
-path = "../../contracts/printerr_macro"
+path = "../../contracts/util"
 default-features = false
 features = ["ink-as-dependency"] 
 
