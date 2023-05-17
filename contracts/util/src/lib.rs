@@ -15,6 +15,15 @@ macro_rules! err_fn {
     };
 }
 
+#[macro_export]
+macro_rules! lazy {
+    ($lazy:expr, $func:ident, $value:expr) => {
+        let mut contents = $lazy.get_or_default();
+        contents.$func($value);
+        $lazy.set(&contents);
+    };
+}
+
 /// An ink contract must be defined in order to import functions into another contract
 #[ink::contract]
 pub mod util {

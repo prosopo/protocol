@@ -17,14 +17,6 @@
 
 pub use self::prosopo::{Prosopo, ProsopoRef};
 
-macro_rules! lazy {
-    ($lazy:expr, $func:ident, $value:expr) => {
-        let mut contents = $lazy.get_or_default();
-        contents.$func($value);
-        $lazy.set(&contents);
-    };
-}
-
 /// Concatenate two arrays (a and b) into a new array (c)
 fn concat_u8<const A: usize, const B: usize, const C: usize>(a: &[u8; A], b: &[u8; B]) -> [u8; C] {
     let mut c = [0; C];
@@ -49,6 +41,7 @@ pub mod prosopo {
     use ink::storage::{traits::StorageLayout, Mapping};
     use util::err;
     use util::err_fn;
+    use util::lazy;
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(
