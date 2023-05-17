@@ -99,7 +99,7 @@ dependencies = [
  "disable_macro",
  "hex",
  "inject_self_macro",
- "ink 4.1.0",
+ "ink",
  "named_functions_macro",
  "parity-scale-codec",
  "scale-info",
@@ -373,40 +373,17 @@ dependencies = [
 
 [[package]]
 name = "ink"
-version = "4.0.0"
-source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
-dependencies = [
- "derive_more",
- "ink_env 4.0.0",
- "ink_macro 4.0.0",
- "ink_metadata 4.0.0",
- "ink_prelude 4.0.0",
- "ink_primitives 4.0.0",
- "ink_storage 4.0.0",
- "parity-scale-codec",
-]
-
-[[package]]
-name = "ink"
 version = "4.1.0"
 source = "git+https://github.com/prosopo/ink?rev=9ca19c462d5f5d1572ddce595d2698207241fd4a#9ca19c462d5f5d1572ddce595d2698207241fd4a"
 dependencies = [
  "derive_more",
- "ink_env 4.1.0",
- "ink_macro 4.1.0",
- "ink_metadata 4.1.0",
- "ink_prelude 4.1.0",
- "ink_primitives 4.1.0",
- "ink_storage 4.1.0",
+ "ink_env",
+ "ink_macro",
+ "ink_metadata",
+ "ink_prelude",
+ "ink_primitives",
+ "ink_storage",
  "parity-scale-codec",
-]
-
-[[package]]
-name = "ink_allocator"
-version = "4.0.0"
-source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
-dependencies = [
- "cfg-if",
 ]
 
 [[package]]
@@ -415,29 +392,6 @@ version = "4.1.0"
 source = "git+https://github.com/prosopo/ink?rev=9ca19c462d5f5d1572ddce595d2698207241fd4a#9ca19c462d5f5d1572ddce595d2698207241fd4a"
 dependencies = [
  "cfg-if",
-]
-
-[[package]]
-name = "ink_codegen"
-version = "4.0.0"
-source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
-dependencies = [
- "blake2",
- "derive_more",
- "either",
- "env_logger",
- "heck",
- "impl-serde",
- "ink_ir 4.0.0",
- "ink_primitives 4.0.0",
- "itertools",
- "log",
- "parity-scale-codec",
- "proc-macro2",
- "quote",
- "serde",
- "serde_json",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -451,8 +405,8 @@ dependencies = [
  "env_logger",
  "heck",
  "impl-serde",
- "ink_ir 4.1.0",
- "ink_primitives 4.1.0",
+ "ink_ir",
+ "ink_primitives",
  "itertools",
  "log",
  "parity-scale-codec",
@@ -465,56 +419,16 @@ dependencies = [
 
 [[package]]
 name = "ink_engine"
-version = "4.0.0"
-source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
-dependencies = [
- "blake2",
- "derive_more",
- "ink_primitives 4.0.0",
- "parity-scale-codec",
- "secp256k1 0.26.0",
- "sha2 0.10.6",
- "sha3",
-]
-
-[[package]]
-name = "ink_engine"
 version = "4.1.0"
 source = "git+https://github.com/prosopo/ink?rev=9ca19c462d5f5d1572ddce595d2698207241fd4a#9ca19c462d5f5d1572ddce595d2698207241fd4a"
 dependencies = [
  "blake2",
  "derive_more",
- "ink_primitives 4.1.0",
+ "ink_primitives",
  "parity-scale-codec",
- "secp256k1 0.27.0",
+ "secp256k1",
  "sha2 0.10.6",
  "sha3",
-]
-
-[[package]]
-name = "ink_env"
-version = "4.0.0"
-source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
-dependencies = [
- "arrayref",
- "blake2",
- "cfg-if",
- "derive_more",
- "ink_allocator 4.0.0",
- "ink_engine 4.0.0",
- "ink_metadata 4.0.0",
- "ink_prelude 4.0.0",
- "ink_primitives 4.0.0",
- "ink_storage_traits 4.0.0",
- "num-traits",
- "parity-scale-codec",
- "paste",
- "rlibc",
- "scale-info",
- "secp256k1 0.26.0",
- "sha2 0.10.6",
- "sha3",
- "static_assertions",
 ]
 
 [[package]]
@@ -526,11 +440,11 @@ dependencies = [
  "blake2",
  "cfg-if",
  "derive_more",
- "ink_allocator 4.1.0",
- "ink_engine 4.1.0",
- "ink_prelude 4.1.0",
- "ink_primitives 4.1.0",
- "ink_storage_traits 4.1.0",
+ "ink_allocator",
+ "ink_engine",
+ "ink_prelude",
+ "ink_primitives",
+ "ink_storage_traits",
  "num-traits",
  "parity-scale-codec",
  "paste",
@@ -539,7 +453,7 @@ dependencies = [
  "scale-encode",
  "scale-info",
  "schnorrkel",
- "secp256k1 0.27.0",
+ "secp256k1",
  "sha2 0.10.6",
  "sha3",
  "static_assertions",
@@ -547,19 +461,6 @@ dependencies = [
 
 [[package]]
 name = "ink_ir"
-version = "4.0.0"
-source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
-dependencies = [
- "blake2",
- "either",
- "itertools",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "ink_ir"
 version = "4.1.0"
 source = "git+https://github.com/prosopo/ink?rev=9ca19c462d5f5d1572ddce595d2698207241fd4a#9ca19c462d5f5d1572ddce595d2698207241fd4a"
 dependencies = [
@@ -573,45 +474,17 @@ dependencies = [
 
 [[package]]
 name = "ink_macro"
-version = "4.0.0"
-source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
-dependencies = [
- "ink_codegen 4.0.0",
- "ink_ir 4.0.0",
- "ink_primitives 4.0.0",
- "parity-scale-codec",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
- "synstructure 0.12.6",
-]
-
-[[package]]
-name = "ink_macro"
 version = "4.1.0"
 source = "git+https://github.com/prosopo/ink?rev=9ca19c462d5f5d1572ddce595d2698207241fd4a#9ca19c462d5f5d1572ddce595d2698207241fd4a"
 dependencies = [
- "ink_codegen 4.1.0",
- "ink_ir 4.1.0",
- "ink_primitives 4.1.0",
+ "ink_codegen",
+ "ink_ir",
+ "ink_primitives",
  "parity-scale-codec",
  "proc-macro2",
  "quote",
  "syn 2.0.15",
- "synstructure 0.13.0",
-]
-
-[[package]]
-name = "ink_metadata"
-version = "4.0.0"
-source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
-dependencies = [
- "derive_more",
- "impl-serde",
- "ink_prelude 4.0.0",
- "ink_primitives 4.0.0",
- "scale-info",
- "serde",
+ "synstructure",
 ]
 
 [[package]]
@@ -621,18 +494,10 @@ source = "git+https://github.com/prosopo/ink?rev=9ca19c462d5f5d1572ddce595d26982
 dependencies = [
  "derive_more",
  "impl-serde",
- "ink_prelude 4.1.0",
- "ink_primitives 4.1.0",
+ "ink_prelude",
+ "ink_primitives",
  "scale-info",
  "serde",
-]
-
-[[package]]
-name = "ink_prelude"
-version = "4.0.0"
-source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
-dependencies = [
- "cfg-if",
 ]
 
 [[package]]
@@ -645,23 +510,11 @@ dependencies = [
 
 [[package]]
 name = "ink_primitives"
-version = "4.0.0"
-source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
-dependencies = [
- "derive_more",
- "ink_prelude 4.0.0",
- "parity-scale-codec",
- "scale-info",
- "xxhash-rust",
-]
-
-[[package]]
-name = "ink_primitives"
 version = "4.1.0"
 source = "git+https://github.com/prosopo/ink?rev=9ca19c462d5f5d1572ddce595d2698207241fd4a#9ca19c462d5f5d1572ddce595d2698207241fd4a"
 dependencies = [
  "derive_more",
- "ink_prelude 4.1.0",
+ "ink_prelude",
  "parity-scale-codec",
  "scale-decode",
  "scale-encode",
@@ -671,49 +524,19 @@ dependencies = [
 
 [[package]]
 name = "ink_storage"
-version = "4.0.0"
-source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
-dependencies = [
- "array-init",
- "cfg-if",
- "derive_more",
- "ink_env 4.0.0",
- "ink_metadata 4.0.0",
- "ink_prelude 4.0.0",
- "ink_primitives 4.0.0",
- "ink_storage_traits 4.0.0",
- "parity-scale-codec",
- "scale-info",
-]
-
-[[package]]
-name = "ink_storage"
 version = "4.1.0"
 source = "git+https://github.com/prosopo/ink?rev=9ca19c462d5f5d1572ddce595d2698207241fd4a#9ca19c462d5f5d1572ddce595d2698207241fd4a"
 dependencies = [
  "array-init",
  "cfg-if",
  "derive_more",
- "ink_env 4.1.0",
- "ink_metadata 4.1.0",
- "ink_prelude 4.1.0",
- "ink_primitives 4.1.0",
- "ink_storage_traits 4.1.0",
+ "ink_env",
+ "ink_metadata",
+ "ink_prelude",
+ "ink_primitives",
+ "ink_storage_traits",
  "parity-scale-codec",
  "scale-info",
-]
-
-[[package]]
-name = "ink_storage_traits"
-version = "4.0.0"
-source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
-dependencies = [
- "ink_metadata 4.0.0",
- "ink_prelude 4.0.0",
- "ink_primitives 4.0.0",
- "parity-scale-codec",
- "scale-info",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -721,9 +544,9 @@ name = "ink_storage_traits"
 version = "4.1.0"
 source = "git+https://github.com/prosopo/ink?rev=9ca19c462d5f5d1572ddce595d2698207241fd4a#9ca19c462d5f5d1572ddce595d2698207241fd4a"
 dependencies = [
- "ink_metadata 4.1.0",
- "ink_prelude 4.1.0",
- "ink_primitives 4.1.0",
+ "ink_metadata",
+ "ink_prelude",
+ "ink_primitives",
  "parity-scale-codec",
  "scale-info",
 ]
@@ -900,7 +723,7 @@ version = "4.0.0"
 dependencies = [
  "disable_macro",
  "inject_self_macro",
- "ink 4.0.0",
+ "ink",
  "named_functions_macro",
  "parity-scale-codec",
  "scale-info",
@@ -1080,15 +903,6 @@ dependencies = [
 
 [[package]]
 name = "secp256k1"
-version = "0.26.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4124a35fe33ae14259c490fd70fa199a32b9ce9502f2ee6bc4f81ec06fa65894"
-dependencies = [
- "secp256k1-sys",
-]
-
-[[package]]
-name = "secp256k1"
 version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "25996b82292a7a57ed3508f052cfff8640d38d32018784acd714758b43da9c8f"
@@ -1227,18 +1041,6 @@ dependencies = [
 
 [[package]]
 name = "synstructure"
-version = "0.12.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f36bdaa60a83aca3921b5259d5400cbf5e90fc51931376a9bd4a0eb79aa7210f"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
- "unicode-xid",
-]
-
-[[package]]
-name = "synstructure"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "285ba80e733fac80aa4270fbcdf83772a79b80aa35c97075320abfee4a915b06"
@@ -1323,7 +1125,7 @@ checksum = "f962df74c8c05a667b5ee8bcf162993134c104e96440b663c8daa176dc772d8c"
 name = "util"
 version = "0.3.0"
 dependencies = [
- "ink 4.0.0",
+ "ink",
  "parity-scale-codec",
  "scale-info",
 ]
