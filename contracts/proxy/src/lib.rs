@@ -2,12 +2,13 @@
 
 #[allow(unused_macros)]
 #[named_functions_macro::named_functions] // allows the use of the function_name!() macro
+#[named_module_macro::named_functions] // allows the use of the mod_name!() macro
 #[inject_self_macro::inject_self] // allows the use of the get_self!() macro
 #[ink::contract]
 pub mod proxy {
 
-    use ink::env::debug_println as debug;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
+    use ink::env::debug_println as debug;
     use ink::storage::traits::StorageLayout;
     use common::err;
 
@@ -48,18 +49,6 @@ pub mod proxy {
                 destination,
                 admin: Self::env().caller(), // set the admin to the caller
             }
-        }
-
-        /// Print and return an error
-        fn print_err(&self, err: Error, fn_name: &str) -> Error {
-            debug!(
-                "ERROR in {}() at block {} with caller {:?}\n'{:?}'",
-                fn_name,
-                self.env().block_number(),
-                self.env().caller(),
-                err
-            );
-            err
         }
 
         /// Set the destination to forward to for this contract

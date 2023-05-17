@@ -17,6 +17,10 @@ path = "../../crates/inject_self_macro"
 version = "0.3.0"
 path = "../../crates/named_functions_macro"
 
+[dependencies.named_module_macro]
+version = "0.3.0"
+path = "../../crates/named_module_macro"
+
 [dependencies.disable_macro]
 version = "0.3.0"
 path = "../../crates/disable_macro"
