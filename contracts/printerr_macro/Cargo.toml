@@ -1,7 +1,7 @@
 [package]
-name = "proxy"
-version = "4.0.0"
-authors = ["Chris Taylor chris@prosopo.io", "George Oastler george@prosopo.io"]
+name = "printerr_macro"
+version = "0.3.0"
+authors = ["Chris Taylor chris@prosopo.io", "George Oastler george@prosopo.io", "Vincenzo Ferrara", "Siniša Čanak"]
 edition = "2021"
 
 [dependencies]
@@ -9,31 +9,13 @@ ink = { git = "https://github.com/prosopo/ink", rev="bec5105fb799263773411793893
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
 
-[dependencies.inject_self_macro]
-version = "0.3.0"
-path = "../../crates/inject_self_macro"
-
-[dependencies.named_functions_macro]
-version = "0.3.0"
-path = "../../crates/named_functions_macro"
-
-[dependencies.disable_macro]
-version = "0.3.0"
-path = "../../crates/disable_macro"
-
-[dependencies.printerr_macro]
-version = "0.3.0"
-path = "../../contracts/printerr_macro"
-default-features = false
-features = ["ink-as-dependency"] 
-
 [lib]
-name = "proxy"
+name = "printerr_macro"
 path = "src/lib.rs"
 crate-type = [
     # Used for normal contract Wasm blobs.
     "cdylib",
-    "rlib"
+    "rlib",
 ]
 
 # Needed until https://github.com/paritytech/ink/issues/364 is resolved.
