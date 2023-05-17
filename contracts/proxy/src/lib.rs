@@ -6,10 +6,10 @@
 #[ink::contract]
 pub mod proxy {
 
+    use common::err;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::env::debug_println as debug;
     use ink::storage::traits::StorageLayout;
-    use common::err;
 
     #[ink(storage)]
     pub struct Proxy {

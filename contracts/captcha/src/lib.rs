@@ -31,6 +31,9 @@ fn concat_u8<const A: usize, const B: usize, const C: usize>(a: &[u8; A], b: &[u
 #[ink::contract]
 pub mod prosopo {
 
+    use common::err;
+    use common::err_fn;
+    use common::lazy;
     use ink::env::debug_println as debug;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
@@ -39,9 +42,6 @@ pub mod prosopo {
     use ink::storage::Lazy;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
-    use common::err;
-    use common::err_fn;
-    use common::lazy;
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(

@@ -51,5 +51,4 @@ pub mod common {
         #[ink(message)]
         pub fn noop(&self) {}
     }
-
 }
