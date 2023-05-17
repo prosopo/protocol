@@ -38,10 +38,10 @@ pub mod common {
 
     /// No fields are stored in the util contract as it's just filler
     #[ink(storage)]
-    pub struct Util {}
+    pub struct Common {}
 
     /// Implementation of the contract
-    impl Util {
+    impl Common {
         #[ink(constructor)]
         pub fn new() -> Self {
             Self {}
