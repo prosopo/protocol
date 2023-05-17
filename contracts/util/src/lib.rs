@@ -15,26 +15,24 @@ macro_rules! err_fn {
     };
 }
 
+/// An ink contract must be defined in order to import functions into another contract
 #[ink::contract]
-pub mod abc {
+pub mod util {
 
+    /// No fields are stored in the util contract as it's just filler
     #[ink(storage)]
-    pub struct Abc {}
+    pub struct Util {}
 
-    impl Abc {
+    /// Implementation of the contract
+    impl Util {
         #[ink(constructor)]
         pub fn new() -> Self {
             Self {}
         }
 
+        /// No-op function to fill the mandatory ink message requirement
         #[ink(message)]
-        pub fn abc(&self, a: u8) -> u8 {
-            a + 1
-        }
-    }
-
-    pub fn def(a: u8) -> u8 {
-        1 + a
+        pub fn noop(&self) {}
     }
 
 }

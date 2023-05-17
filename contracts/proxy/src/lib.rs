@@ -8,9 +8,7 @@ pub mod proxy {
 
     use ink::env::debug_println as debug;
     use ink::storage::traits::StorageLayout;
-    use util::abc::def;
     use util::err;
-    use util::err_fn;
 
     #[ink(storage)]
     pub struct Proxy {
@@ -66,7 +64,6 @@ pub mod proxy {
         /// Set the destination to forward to for this contract
         #[ink(message)]
         pub fn set_destination(&mut self, destination: AccountId) -> Result<(), Error> {
-            debug!("{:?}", def(3));
             if self.env().caller() != self.admin {
                 return err!(Error::NotAuthorised);
             }
