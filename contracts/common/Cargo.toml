@@ -1,5 +1,5 @@
 [package]
-name = "util"
+name = "common"
 version = "0.3.0"
 authors = ["Chris Taylor chris@prosopo.io", "George Oastler george@prosopo.io", "Vincenzo Ferrara", "Siniša Čanak"]
 edition = "2021"
@@ -10,7 +10,7 @@ scale = { package = "parity-scale-codec", version = "3", default-features = fals
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
 
 [lib]
-name = "util"
+name = "common"
 path = "src/lib.rs"
 crate-type = [
     # Used for normal contract Wasm blobs.

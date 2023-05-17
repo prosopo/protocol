@@ -96,6 +96,7 @@ checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
 name = "captcha"
 version = "4.0.0"
 dependencies = [
+ "common",
  "disable_macro",
  "hex",
  "inject_self_macro",
@@ -103,7 +104,6 @@ dependencies = [
  "named_functions_macro",
  "parity-scale-codec",
  "scale-info",
- "util",
 ]
 
 [[package]]
@@ -117,6 +117,15 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "common"
+version = "0.3.0"
+dependencies = [
+ "ink",
+ "parity-scale-codec",
+ "scale-info",
+]
 
 [[package]]
 name = "cpufeatures"
@@ -721,13 +730,13 @@ dependencies = [
 name = "proxy"
 version = "4.0.0"
 dependencies = [
+ "common",
  "disable_macro",
  "inject_self_macro",
  "ink",
  "named_functions_macro",
  "parity-scale-codec",
  "scale-info",
- "util",
 ]
 
 [[package]]
@@ -1120,15 +1129,6 @@ name = "unicode-xid"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f962df74c8c05a667b5ee8bcf162993134c104e96440b663c8daa176dc772d8c"
-
-[[package]]
-name = "util"
-version = "0.3.0"
-dependencies = [
- "ink",
- "parity-scale-codec",
- "scale-info",
-]
 
 [[package]]
 name = "version_check"

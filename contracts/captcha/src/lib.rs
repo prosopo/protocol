@@ -39,9 +39,9 @@ pub mod prosopo {
     use ink::storage::Lazy;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
-    use util::err;
-    use util::err_fn;
-    use util::lazy;
+    use common::err;
+    use common::err_fn;
+    use common::lazy;
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(

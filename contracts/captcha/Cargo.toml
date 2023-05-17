@@ -22,9 +22,9 @@ path = "../../crates/named_functions_macro"
 version = "0.3.0"
 path = "../../crates/disable_macro"
 
-[dependencies.util]
+[dependencies.common]
 version = "0.3.0"
-path = "../../contracts/util"
+path = "../../contracts/common"
 default-features = false
 features = ["ink-as-dependency"] 
 

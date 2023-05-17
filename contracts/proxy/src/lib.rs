@@ -8,7 +8,7 @@ pub mod proxy {
 
     use ink::env::debug_println as debug;
     use ink::storage::traits::StorageLayout;
-    use util::err;
+    use common::err;
 
     #[ink(storage)]
     pub struct Proxy {
