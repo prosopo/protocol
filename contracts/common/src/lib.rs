@@ -43,12 +43,12 @@ pub mod common {
     /// Implementation of the contract
     impl Common {
         #[ink(constructor)]
-        pub fn new() -> Self {
+        pub fn noop_ctor() -> Self {
             Self {}
         }
 
         /// No-op function to fill the mandatory ink message requirement
         #[ink(message)]
-        pub fn noop(&self) {}
+        pub fn noop_func(&self) {}
     }
 }
