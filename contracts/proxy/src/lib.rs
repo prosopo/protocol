@@ -180,84 +180,14 @@ pub mod proxy {
         use ink::env::hash::Blake2x256;
         use ink::env::hash::CryptoHash;
         use ink::env::hash::HashOutput;
+        use common::common::tests::*;
 
         /// Imports all the definitions from the outer scope so we can use them here.
         use super::*;
 
-        const set_caller: fn(AccountId) =
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>;
-        const get_account_balance: fn(AccountId) -> Result<u128, ink::env::Error> =
-            ink::env::test::get_account_balance::<ink::env::DefaultEnvironment>;
-        const set_account_balance: fn(AccountId, u128) =
-            ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>;
-        const set_callee: fn(AccountId) =
-            ink::env::test::set_callee::<ink::env::DefaultEnvironment>;
-        const set_contract: fn(AccountId) =
-            ink::env::test::set_contract::<ink::env::DefaultEnvironment>;
-        const default_accounts: fn() -> ink::env::test::DefaultAccounts<
-            ink::env::DefaultEnvironment,
-        > = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>;
-
-        // unused account is 0x00 - do not use this, it will be the default caller, so could get around caller checks accidentally
-        fn get_unused_account() -> AccountId {
-            AccountId::from([0x00; 32])
-        }
-
-        const ADMIN_ACCOUNT_PREFIX: u8 = 0x01;
-        const USER_ACCOUNT_PREFIX: u8 = 0x04;
-        const CONTRACT_ACCOUNT_PREFIX: u8 = 0x05;
-        const CODE_HASH_PREFIX: u8 = 0x06;
-        const FORWARD_ADDRESS_PREFIX: u8 = 0x07;
-
-        // build an account. Accounts have the first byte set to the type of account and the next 16 bytes are the index of the account
-        fn get_account_bytes(account_type: u8, index: u128) -> [u8; 32] {
-            let mut bytes = [0x00; 32];
-            bytes[0] = account_type;
-            bytes[1..17].copy_from_slice(&index.to_le_bytes());
-            bytes
-        }
-
-        fn get_account(account_type: u8, index: u128) -> AccountId {
-            let account = AccountId::from(get_account_bytes(account_type, index));
-            // fund the account so it exists if not already
-            let balance = get_account_balance(account);
-            if balance.is_err() {
-                // account doesn't have the existential deposit so doesn't exist
-                // give it funds to create it
-                set_account_balance(account, 1);
-            }
-            account
-        }
-
-        /// get the nth code hash. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
-        fn get_code_hash(index: u128) -> [u8; 32] {
-            get_account_bytes(CODE_HASH_PREFIX, index)
-        }
-
-        /// get the nth user account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
-        fn get_user_account(index: u128) -> AccountId {
-            get_account(USER_ACCOUNT_PREFIX, index)
-        }
-
-        /// get the nth contract account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
-        fn get_contract_account(index: u128) -> AccountId {
-            let account = get_account(CONTRACT_ACCOUNT_PREFIX, index);
-            set_contract(account); // mark the account as a contract
-            account
-        }
-
-        /// get the nth admin account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
-        fn get_admin_account(index: u128) -> AccountId {
-            get_account(ADMIN_ACCOUNT_PREFIX, index)
-        }
-
-        fn get_forward_account(index: u128) -> AccountId {
-            get_account(FORWARD_ADDRESS_PREFIX, index)
-        }
-
         /// get the nth contract. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
         fn get_contract(index: u128) -> Proxy {
-            let account = get_account(CONTRACT_ACCOUNT_PREFIX, index); // the account for the contract
+            let account = get_contract_account(index); // the account for the contract
                                                                        // make sure the contract gets allocated the above account
             set_callee(account);
             // give the contract account some funds
@@ -312,45 +242,6 @@ pub mod proxy {
                 let contract = get_contract(i);
                 // check the account has funds. Will panic if not as no existential deposit == account not found
                 get_account_balance(contract.env().account_id()).unwrap();
-            }
-        }
-
-        /// Are the unit test accounts unique, i.e. make sure there's no collisions in accounts destined for different roles, as this would invalidate any caller guards
-        #[ink::test]
-        fn test_accounts_unique() {
-            let mut set: std::collections::HashSet<[u8; 32]> = std::collections::HashSet::new();
-
-            // for each method of generating an account
-            for func in vec![
-                get_admin_account,
-                get_contract_account,
-                get_user_account,
-                get_forward_account,
-            ]
-            .iter()
-            {
-                // try the first 10 accounts
-                for i in 0..10 {
-                    let account = func(i);
-                    assert!(
-                        set.insert(*AsRef::<[u8; 32]>::as_ref(&account)),
-                        "Duplicate account ID found: {:?}",
-                        account
-                    );
-                }
-            }
-
-            // do the same for non-account based IDs
-            for func in vec![get_code_hash].iter() {
-                // try the first 10 accounts
-                for i in 0..10 {
-                    let account = func(i);
-                    assert!(
-                        set.insert(account),
-                        "Duplicate account ID found: {:?}",
-                        account
-                    );
-                }
             }
         }
 
