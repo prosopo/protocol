@@ -85,6 +85,8 @@ pub mod common {
             pub const default_accounts: fn() -> ink::env::test::DefaultAccounts<
             ink::env::DefaultEnvironment,
         > = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>;
+        const set_contract: fn(AccountId) =
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>;
 
         const ADMIN_ACCOUNT_PREFIX: u8 = 0x01;
         const DAPP_ACCOUNT_PREFIX: u8 = 0x02;
@@ -141,7 +143,9 @@ pub mod common {
 
             /// get the nth contract account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
             pub fn get_contract_account(index: u128) -> AccountId {
-                get_account(CONTRACT_ACCOUNT_PREFIX, index)
+                let account = get_account(CONTRACT_ACCOUNT_PREFIX, index);
+                set_contract(account); // mark the account as a contract
+                account
             }
 
             /// get the nth code hash. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
@@ -184,6 +188,8 @@ pub mod common {
                 get_contract_account,
                 get_user_account,
                 get_forward_account,
+                get_provider_account,
+                get_dapp_account,
             ]
             .iter()
             {
