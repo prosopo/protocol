@@ -175,12 +175,12 @@ pub mod proxy {
         )
     )]
     mod tests {
+        use common::common::tests::*;
         use ink;
         use ink::codegen::Env;
         use ink::env::hash::Blake2x256;
         use ink::env::hash::CryptoHash;
         use ink::env::hash::HashOutput;
-        use common::common::tests::*;
 
         /// Imports all the definitions from the outer scope so we can use them here.
         use super::*;
@@ -188,7 +188,7 @@ pub mod proxy {
         /// get the nth contract. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
         fn get_contract(index: u128) -> Proxy {
             let account = get_contract_account(index); // the account for the contract
-                                                                       // make sure the contract gets allocated the above account
+                                                       // make sure the contract gets allocated the above account
             set_callee(account);
             // give the contract account some funds
             set_account_balance(account, 1);
