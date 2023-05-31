@@ -264,8 +264,9 @@ export async function processArgs(args: string[]) {
                     if(contract === "common_dev") {
                         // skip common_dev contract as it is not a proper contract, only used for library purposes and does not build independently
                         console.log("Skipping common_dev contract");
+                    } else {
+                        await execCargo(argv, 'contract build', `${contractsDir}/${contract}`)
                     }
-                    await execCargo(argv, 'contract build', `${contractsDir}/${contract}`)
                 }
             },
             []
