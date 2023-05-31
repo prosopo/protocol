@@ -15,21 +15,13 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 #![cfg_attr(not(feature = "std"), no_std)]
 
-pub use self::prosopo::{Prosopo, ProsopoRef};
-
-/// Concatenate two arrays (a and b) into a new array (c)
-fn concat_u8<const A: usize, const B: usize, const C: usize>(a: &[u8; A], b: &[u8; B]) -> [u8; C] {
-    let mut c = [0; C];
-    c[..A].copy_from_slice(a);
-    c[A..A + B].copy_from_slice(b);
-    c
-}
+pub use self::captcha::{Captcha, CaptchaRef};
 
 #[allow(unused_macros)]
 #[named_functions_macro::named_functions] // allows the use of the function_name!() macro
 #[inject_self_macro::inject_self] // allows the use of the get_self!() macro
 #[ink::contract]
-pub mod prosopo {
+pub mod captcha {
 
     use common::err;
     use common::err_fn;
@@ -133,7 +125,7 @@ pub mod prosopo {
     pub struct RandomProvider {
         provider_id: AccountId,
         provider: Provider,
-        block_number: u32,
+        block_number: BlockNumber,
         dataset_id_content: Hash,
     }
 
@@ -153,15 +145,16 @@ pub mod prosopo {
     #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Commit {
-        id: Hash,                  // the commitment id
-        user: AccountId,           // the user who submitted the commitment
-        dataset_id: Hash,          // the dataset id
-        status: CaptchaStatus,     // the status of the commitment
-        dapp: AccountId,           // the dapp which the user completed the captcha on
-        provider: AccountId,       // the provider who supplied the challenge
-        requested_at: BlockNumber, // the block number at which the captcha was requested
-        completed_at: BlockNumber, // the block number at which the captcha was completed
-        user_signature: Vec<u8>,   // the user's signature of the commitment
+        id: Hash,                       // the commitment id
+        user: AccountId,                // the user who submitted the commitment
+        dataset_id: Hash,               // the dataset id
+        status: CaptchaStatus,          // the status of the commitment
+        dapp: AccountId,                // the dapp which the user completed the captcha on
+        provider: AccountId,            // the provider who supplied the challenge
+        requested_at: BlockNumber,      // the block number at which the captcha was requested
+        completed_at: BlockNumber,      // the block number at which the captcha was completed
+        user_signature_part1: [u8; 32], // the user's signature of the commitment
+        user_signature_part2: [u8; 32],
     }
 
     /// DApps are distributed apps who want their users to be verified by Providers, either paying
@@ -172,7 +165,6 @@ pub mod prosopo {
         status: GovernanceStatus,
         balance: Balance,
         owner: AccountId,
-        min_difficulty: u16,
         payee: DappPayee,
     }
 
@@ -182,7 +174,7 @@ pub mod prosopo {
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct User {
         // the last n commitment hashes in chronological order (most recent first)
-        history: Vec<Hash>, // lookup the commitment in Prosopo.commitments
+        history: Vec<Hash>, // lookup the commitment in commitments
     }
 
     /// The summary of a user's captcha history using the n most recent captcha results limited by age and number of captcha results
@@ -210,7 +202,7 @@ pub mod prosopo {
 
     // Contract storage
     #[ink(storage)]
-    pub struct Prosopo {
+    pub struct Captcha {
         admin: AccountId, // the admin in control of this contract
         providers: Mapping<AccountId, Provider>,
         provider_accounts: Mapping<ProviderState, BTreeSet<AccountId>>,
@@ -224,12 +216,12 @@ pub mod prosopo {
         dapp_users: Mapping<AccountId, User>,
         user_accounts: Lazy<BTreeSet<AccountId>>,
         max_user_history_len: u16, // the max number of captcha results to store in history for a user
-        max_user_history_age: BlockNumber, // the max age, in blocks, of captcha results to store in history for a user
+        max_user_history_age: u16, // the max age, in blocks, of captcha results to store in history for a user
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
     }
 
-    /// The Prosopo error types
+    /// The error types
     ///
     #[derive(
         Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, PartialOrd, Ord,
@@ -292,18 +284,21 @@ pub mod prosopo {
         VerifyFailed,
     }
 
-    impl Prosopo {
+    impl Captcha {
         /// Constructor
         #[ink(constructor, payable)]
         pub fn new(
             provider_stake_threshold: Balance,
             dapp_stake_threshold: Balance,
             max_user_history_len: u16,
-            max_user_history_age: BlockNumber,
+            max_user_history_age: u16,
             min_num_active_providers: u16,
             max_provider_fee: Balance,
         ) -> Self {
-            let instantiator = AccountId::from([0x1; 32]); // alice
+            let instantiator = AccountId::from([
+                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
+                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+            ]); // alice
             if Self::env().caller() != instantiator {
                 panic!("Not authorised to instantiate this contract");
             }
@@ -321,7 +316,7 @@ pub mod prosopo {
             provider_stake_threshold: Balance,
             dapp_stake_threshold: Balance,
             max_user_history_len: u16,
-            max_user_history_age: BlockNumber,
+            max_user_history_age: u16,
             min_num_active_providers: u16,
             max_provider_fee: Balance,
         ) -> Self {
@@ -346,9 +341,9 @@ pub mod prosopo {
         }
 
         /// Verify a signature. The payload is a blake128 hash of the payload wrapped in the Byte tag. E.g.
-        ///     message="hello"
+        ///     message=hello
         ///     hash=blake128(message) // 0x1234... (32 bytes)
-        ///     payload="<Bytes>0x1234...</Bytes>" (32 bytes + 15 bytes (tags) + 2 bytes (multihash notation) = 49 bytes)
+        ///     payload=<Bytes>0x1234...</Bytes> (32 bytes + 15 bytes (tags) + 2 bytes (multihash notation) = 49 bytes)
         ///
         /// Read more about multihash notation here https://w3c-ccg.github.io/multihash/index.xml#mh-example (adds two bytes to identify type and length of hash function)
         ///
@@ -736,7 +731,6 @@ pub mod prosopo {
                 balance: 0,
                 status: GovernanceStatus::Inactive,
                 payee: payee.unwrap_or(DappPayee::Provider),
-                min_difficulty: 1,
             });
             let mut new_dapp = old_dapp;
 
@@ -864,10 +858,10 @@ pub mod prosopo {
         /// Returns the history and expired hashes.
         fn trim_user_history(&self, mut history: Vec<Hash>) -> (Vec<Hash>, Vec<Hash>) {
             let block_number = self.env().block_number();
-            let max_age = if block_number < self.max_user_history_age {
+            let max_age = if block_number < self.max_user_history_age as u32 {
                 block_number
             } else {
-                self.max_user_history_age
+                self.max_user_history_age as u32
             };
             let age_threshold = block_number - max_age;
             let mut expired = Vec::new();
@@ -940,8 +934,10 @@ pub mod prosopo {
             if summary.correct + summary.incorrect == 0 {
                 summary.score = 0;
             } else {
-                summary.score =
-                    ((summary.correct * 100) / (summary.correct + summary.incorrect)) as u8;
+                // score is between 0 - 200, i.e. 0% - 100% in 0.5% increments
+                let total: u16 = summary.correct + summary.incorrect;
+                let correct: u16 = summary.correct * 200;
+                summary.score = (correct / total) as u8;
             }
 
             Ok(summary)
@@ -1033,6 +1029,7 @@ pub mod prosopo {
 
         /// Checks if the user is a human (true) as they have a solution rate higher than a % threshold or a bot (false)
         /// Threshold is decided by the calling user
+        /// Threshold is between 0-200, i.e. 0-100% in 0.5% increments. E.g. 100 = 50%, 200 = 100%, 0 = 0%, 50 = 25%, etc.
         #[ink(message)]
         pub fn dapp_operator_is_human_user(
             &self,
@@ -1378,14 +1375,19 @@ pub mod prosopo {
             // pack all the data into a single byte array
             let block_number_arr: [u8; BLOCK_NUMBER_SIZE] = block_number.to_le_bytes();
             let block_timestamp_arr: [u8; BLOCK_TIMESTAMP_SIZE] = block_timestamp.to_le_bytes();
-            let tmp1: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE] =
-                crate::concat_u8(&block_number_arr, &block_timestamp_arr);
-            let tmp2: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + ACCOUNT_SIZE] =
-                crate::concat_u8(&tmp1, user_account_bytes);
-            let bytes: [u8; BLOCK_TIMESTAMP_SIZE
+            let mut bytes: [u8; BLOCK_TIMESTAMP_SIZE
                 + BLOCK_NUMBER_SIZE
                 + ACCOUNT_SIZE
-                + ACCOUNT_SIZE] = crate::concat_u8(&tmp2, dapp_account_bytes);
+                + ACCOUNT_SIZE] =
+                [0x0; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + ACCOUNT_SIZE + ACCOUNT_SIZE];
+            bytes[0..BLOCK_NUMBER_SIZE].copy_from_slice(&block_number_arr);
+            bytes[BLOCK_NUMBER_SIZE..BLOCK_NUMBER_SIZE + BLOCK_TIMESTAMP_SIZE]
+                .copy_from_slice(&block_timestamp_arr);
+            bytes[BLOCK_NUMBER_SIZE + BLOCK_TIMESTAMP_SIZE
+                ..BLOCK_NUMBER_SIZE + BLOCK_TIMESTAMP_SIZE + ACCOUNT_SIZE]
+                .copy_from_slice(user_account_bytes);
+            bytes[BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + ACCOUNT_SIZE..]
+                .copy_from_slice(dapp_account_bytes);
             // hash to ensure small changes (e.g. in the block timestamp) result in large change in the seed
             let mut hash_output = <Blake2x128 as HashOutput>::Type::default();
             <Blake2x128 as CryptoHash>::hash(&bytes, &mut hash_output);
@@ -1491,12 +1493,12 @@ pub mod prosopo {
         use ink::env::hash::CryptoHash;
         use ink::env::hash::HashOutput;
 
-        use crate::prosopo::Error::{ProviderInactive, ProviderInsufficientFunds};
+        use crate::captcha::Error::{ProviderInactive, ProviderInsufficientFunds};
 
         /// Imports all the definitions from the outer scope so we can use them here.
         use super::*;
 
-        type Event = <Prosopo as ::ink::reflect::ContractEventBase>::Type;
+        type Event = <Captcha as ::ink::reflect::ContractEventBase>::Type;
 
         const STAKE_THRESHOLD: u128 = 1000000000000;
 
@@ -1580,7 +1582,7 @@ pub mod prosopo {
             }
 
             /// get the nth contract. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
-            fn get_contract(index: u128) -> Prosopo {
+            fn get_contract(index: u128) -> Captcha {
                 let account = get_account(CONTRACT_ACCOUNT_PREFIX, index); // the account for the contract
                                                                            // make sure the contract gets allocated the above account
                 set_callee(account);
@@ -1590,7 +1592,7 @@ pub mod prosopo {
                 set_caller(get_admin_account(0));
                 // now construct the contract instance
                 let mut contract =
-                    Prosopo::new_unguarded(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
+                    Captcha::new_unguarded(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 255, 0, 1000);
                 // set the caller back to the unused acc
                 set_caller(get_unused_account());
                 // check the contract was created with the correct account
@@ -1604,8 +1606,11 @@ pub mod prosopo {
                 set_caller(get_unused_account());
 
                 // only able to instantiate from the alice account
-                set_caller(default_accounts().alice);
-                let contract = Prosopo::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
+                set_caller(AccountId::from([
+                    212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130,
+                    44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+                ]));
+                let contract = Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 255, 0, 1000);
                 // should construct successfully
             }
 
@@ -1617,7 +1622,7 @@ pub mod prosopo {
 
                 // only able to instantiate from the alice account
                 set_caller(default_accounts().bob);
-                let contract = Prosopo::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
+                let contract = Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 255, 0, 1000);
                 // should fail to construct and panic
             }
 
@@ -1633,7 +1638,7 @@ pub mod prosopo {
                 assert_eq!(contract.dapp_stake_threshold, STAKE_THRESHOLD);
                 assert_eq!(contract.admin, get_admin_account(0));
                 assert_eq!(contract.max_user_history_len, 10);
-                assert_eq!(contract.max_user_history_age, 1000000);
+                assert_eq!(contract.max_user_history_age, 255);
                 assert_eq!(contract.min_num_active_providers, 0);
                 assert_eq!(contract.max_provider_fee, 1000);
 
@@ -2715,7 +2720,8 @@ pub mod prosopo {
                     completed_at: 0,
                     requested_at: 0,
                     id: solution_id,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
                 let commitment = contract
                     .captcha_solution_commitments
@@ -2739,7 +2745,8 @@ pub mod prosopo {
                     completed_at: 0,
                     requested_at: 0,
                     id: solution_id,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
                 let commitment = contract
                     .captcha_solution_commitments
@@ -2814,7 +2821,8 @@ pub mod prosopo {
                     completed_at: 0,
                     requested_at: 0,
                     id: solution_id,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
             }
 
@@ -2879,7 +2887,8 @@ pub mod prosopo {
                         completed_at: 0,
                         requested_at: 0,
                         id: solution_id,
-                        user_signature: Vec::new(),
+                        user_signature_part1: [0x0; 32],
+                        user_signature_part2: [0x0; 32],
                     })
                     .unwrap();
                 let commitment = contract
@@ -2902,7 +2911,8 @@ pub mod prosopo {
                     completed_at: 0,
                     requested_at: 0,
                     id: solution_id,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
                 let commitment = contract
                     .captcha_solution_commitments
@@ -2977,7 +2987,8 @@ pub mod prosopo {
                     completed_at: 0,
                     requested_at: 0,
                     id: solution_id,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
                 let commitment = contract
                     .captcha_solution_commitments
@@ -2986,7 +2997,7 @@ pub mod prosopo {
                 assert_eq!(commitment.status, CaptchaStatus::Disapproved);
 
                 // Now make sure that the dapp user does not pass the human test
-                let result = contract.dapp_operator_is_human_user(dapp_user_account, 80);
+                let result = contract.dapp_operator_is_human_user(dapp_user_account, 80 * 2);
                 assert!(!result.unwrap());
             }
 
@@ -3160,7 +3171,8 @@ pub mod prosopo {
                     completed_at: 0,
                     requested_at: 0,
                     id: user_root1,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
 
                 // Get the commitment and make sure it is approved
@@ -3181,7 +3193,8 @@ pub mod prosopo {
                     completed_at: 0,
                     requested_at: 0,
                     id: user_root2,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
 
                 // Get the commitment and make sure it is disapproved
@@ -3259,7 +3272,7 @@ pub mod prosopo {
                 operator_accounts
             }
 
-            fn setup_contract() -> (AccountId, AccountId, Vec<AccountId>, Prosopo) {
+            fn setup_contract() -> (AccountId, AccountId, Vec<AccountId>, Captcha) {
                 let op1 = AccountId::from([0x1; 32]);
                 let op2 = AccountId::from([0x2; 32]);
                 let ops = vec![op1, op2];
