@@ -87,6 +87,7 @@ pub mod common {
         > = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>;
         const set_contract: fn(AccountId) =
             ink::env::test::set_contract::<ink::env::DefaultEnvironment>;
+        const callee: fn() -> AccountId = ink::env::test::callee::<ink::env::DefaultEnvironment>;
 
         const ADMIN_ACCOUNT_PREFIX: u8 = 0x01;
         const DAPP_ACCOUNT_PREFIX: u8 = 0x02;
@@ -157,6 +158,33 @@ pub mod common {
             get_account(FORWARD_ADDRESS_PREFIX, index)
         }
 
+        pub fn reset_caller() {
+            set_caller(get_unused_account());
+        }
+
+        pub fn reset_callee() {
+            set_callee(get_unused_account());
+        }
+
+        /// get the nth contract. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
+        pub fn get_contract<A>(index: u128, ctor: fn(index: u128) -> A) -> A {
+            // get the current callee and caller
+            let orig_callee = callee();
+            let account = get_contract_account(index); // the account for the contract
+            set_callee(account);
+            // give the contract account some funds
+            set_account_balance(account, 1);
+            // set the caller to the first admin
+            set_caller(get_admin_account(0));
+            // now construct the contract instance
+            let mut contract = ctor(index);
+            // set the caller back to the unused acc
+            reset_caller();
+            // and callee back to the original
+            set_callee(orig_callee);
+            contract
+        }
+
         /// Unit tests are placed in an inner module so they are independent of imports in other packages. For some reason in ink, when importing from this module the module being imported cannot be marked as an ink test otherwise compilation fails. Hence we put it as an inner module here. External packages can import the outer module and use the functions defined here.
         #[cfg(test)]
         #[cfg_attr(
@@ -173,6 +201,18 @@ pub mod common {
         )]
         pub mod tests_inner {
             use super::*;
+
+            /// Test accounts are funded with existential deposit
+            #[ink::test]
+            fn test_accounts_funded() {
+                for func in vec![get_admin_account, get_contract_account].iter() {
+                    for i in 0..10 {
+                        let account = func(i);
+                        // check the account has funds. Will panic if not as no existential deposit == account not found
+                        get_account_balance(account).unwrap();
+                    }
+                }
+            }
 
             /// Are the unit test accounts unique, i.e. make sure there's no collisions in accounts destined for different roles, as this would invalidate any caller guards
             #[ink::test]
