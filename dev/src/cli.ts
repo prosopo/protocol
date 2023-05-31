@@ -261,6 +261,10 @@ export async function processArgs(args: string[]) {
                 const contracts = argv.package as string[];
                 delete argv.package;
                 for(const contract of contracts) {
+                    if(contract === "common") {
+                        // skip common contract as it is not a proper contract, only used for library purposes and does not build independently
+                        console.log("Skipping common contract");
+                    }
                     await execCargo(argv, 'contract build', `${contractsDir}/${contract}`)
                 }
             },
