@@ -1,25 +1,44 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+pub const AUTHOR: [u8; 32] = [
+    212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133,
+    76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+];
+
 /// Print and return an error in ink
 #[macro_export]
 macro_rules! err {
-    ($e:expr) => {{
-        let self_ = get_self!();
+    ($self_:ident, $err:expr) => {{
         ink::env::debug_println!(
-            "'{:?}' error in {:?}() at block {:?} with caller {:?}",
-            $e,
-            function_name!(),
-            self_.env().block_number(),
-            self_.env().caller(),
+            "ERROR: 
+    type: {:?}
+    block: {:?}
+    caller: {:?}
+",
+            $err,
+            $self_.env().block_number(),
+            $self_.env().caller(),
         );
-        Err($e)
+        Err($err)
     }};
 }
 
 #[macro_export]
 macro_rules! err_fn {
-    ($err:expr) => {
-        || get_self!().print_err($err, function_name!())
+    ($self_:ident, $err:expr) => {
+        || {
+            ink::env::debug_println!(
+                "ERROR: 
+        type: {:?}
+        block: {:?}
+        caller: {:?}
+    ",
+                $err,
+                $self_.env().block_number(),
+                $self_.env().caller(),
+            );
+            $err
+        }
     };
 }
 
@@ -32,9 +51,15 @@ macro_rules! lazy {
     };
 }
 
+pub use self::common::{Common, CommonRef};
+
 /// An ink contract must be defined in order to import functions into another contract
 #[ink::contract]
 pub mod common {
+
+    pub fn account_id_bytes<'a>(account: &'a AccountId) -> &[u8; 32] {
+        AsRef::<[u8; 32]>::as_ref(account)
+    }
 
     /// No fields are stored in the util contract as it's just filler
     #[ink(storage)]

@@ -100,9 +100,7 @@ dependencies = [
  "common_dev",
  "disable_macro",
  "hex",
- "inject_self_macro",
  "ink",
- "named_functions_macro",
  "parity-scale-codec",
  "scale-info",
 ]
